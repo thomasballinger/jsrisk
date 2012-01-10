@@ -67,11 +67,12 @@ var country = function(name, connected_to){
 var game = function(name, countries, players){
     // private variables
     actions = {
-        'move' : {
+        'fortify' : {
             // soft stuff - what to suggest, info
             description : 'Move troops from one owned country to an adj. one',
             args : ['player', 'from', 'to', 'how_many'],
             should_be_suggested : function(){return true;},
+            requires_server : false,
             arg_suggest_functions : [
                 function(){return players;},
                 function(player){
@@ -113,11 +114,135 @@ var game = function(name, countries, players){
                 // todo: add if the move is allowed at this turn stage etc.
                 from_c = get_country(from);
                 to_c = get_country(to);
+                if (from_c === undefined){return false;}
+                if (to_c === undefined){return false;}
+                if (player === undefined){return false;}
+                if (how_many === undefined){return false;}
                 if (!(from_c.is_owned_by(player) && to_c.is_owned_by(player))){return false;}
                 if (how_many > from_c.get_troops() - 1){return false;}
                 if (!(from_c.is_touching(to_c.get_name()))){return false;}
                 from_c.set_state(player, from_c.get_troops() - how_many);
                 to_c.set_state(player, to_c.get_troops() + how_many);
+                return true;
+            }
+        },
+        'reinforce' : {
+            description : 'add an additional troop to a country you control',
+            args : ['player', 'country', 'how_many'],
+            should_be_suggested : function(){return true;},
+            requires_server : false,
+            arg_suggest_functions : [
+                function(){return players;},
+                function(player){
+                    var owned = get_countries_owned(player);
+                    var to_suggest = [];
+                    for (var i = 0; i < owned.length; i++){
+                        to_suggest.push(owned[i].get_name())
+                    }
+                    return to_suggest;
+                },
+                function(player, country){
+                    var to_suggest = [];
+                    for (var i = 0; i < 10; i++){
+                        to_suggest.push(i);
+                    }
+                    return to_suggest;
+                }
+            ],
+            action : function(player, country, how_many){
+                country = get_country(country);
+                if (!country.is_owned_by(player)){return false;}
+                if (player === undefined){return false;}
+                if (country === undefined){return false;}
+                if (how_many === undefined){return false;}
+                document.writeln(country.get_troops());
+                document.writeln(how_many);
+                country.set_state(player, country.get_troops() + how_many);
+                return true;
+            },
+        },
+        'attack' : {
+            description : 'attack a country from an adjacent country you control',
+            args : ['player', 'from', 'to', 'how_many'],
+            should_be_suggested : function(){return true;},
+            requires_server : true,
+            arg_suggest_functions : [
+                function(){return players;},
+                function(player){
+                    var owned = get_countries_owned(player);
+                    var to_suggest = [];
+                    for (var i = 0; i < owned.length; i++){
+                        if (owned[i].get_troops() > 1){
+                            if (get_countries_not_owned_by_and_touching(player, owned[i].get_name()).length > 0){
+                                to_suggest.push(owned[i].get_name());
+                            }
+                        }
+                    }
+                    return to_suggest;
+                },
+                function(player, from){
+                    var results = [];
+                    var gcnobat = get_countries_not_owned_by_and_touching(player, from);
+                    for (var i = 0; i < gcnobat.length; i++){
+                        results.push(gcnobat[i].get_name());
+                    }
+                    return results;
+
+                },
+                function(player, from, to){
+                    var troops = get_country(from).get_troops();
+                    results = [];
+                    for (var i = 1; i < Math.min(troops, 4); i++){
+                        results.push(i);
+                    }
+                    return results;
+                },
+            ],
+            action : function(player, from, to, how_many){
+                from = get_country(from);
+                to = get_country(to);
+                if (!from.is_owned_by(player)){return false;}
+                if (to.is_owned_by(player)){return false;}
+                if (player === undefined){return false;}
+                if (from === undefined){return false;}
+                if (to === undefined){return false;}
+                if (how_many === undefined){return false;}
+                var attacking = how_many;
+                var defending = Math.min(to.get_troops(), 2);
+                var attack_rolls = [];
+                var defend_rolls = [];
+                for (var i=0; i < attacking; i++){
+                    attack_rolls.push(Math.ceil(Math.random()*6));
+                }
+                for (var i=0; i < defending; i++){
+                    defend_rolls.push(Math.ceil(Math.random()*6));
+                }
+                attack_rolls.sort(function(x){return -x});
+                defend_rolls.sort(function(x){return -x});
+                var defenders_lost = 0;
+                var attackers_lost = 0;
+                if (attack_rolls[0] > defend_rolls[0]){
+                    defenders_lost++;
+                }else{
+                    attackers_lost++;
+                }
+                if (defending === 2){
+                    if (attack_rolls[1] > defend_rolls[1]){
+                        defenders_lost++;
+                    }else{
+                        attackers_lost++;
+                    }
+                }
+                document.writeln('attacker rolls: '+attack_rolls);
+                document.writeln('defender rolls: '+defend_rolls);
+                document.writeln('attackers lost: '+attackers_lost);
+                document.writeln('defenders lost: '+defenders_lost);
+                from.set_state(player, from.get_troops() - attackers_lost);
+                to.set_state(to.get_owner(), to.get_troops() - defenders_lost);
+                if (to.get_troops() === 0){
+                    to.set_state(player, attacking - attackers_lost);
+                    from.set_state(player, from.get_troops() - attackers);
+                }
                 return true;
             }
         }
@@ -139,6 +264,18 @@ var game = function(name, countries, players){
         for (var i = 0; i < touching.length; i++){
             test_country = get_country(touching[i])
             if (test_country.is_owned_by(player)){
+                results.push(test_country);
+            }
+        }
+        return results;
+    }
+    var get_countries_not_owned_by_and_touching = function(player, country_name){
+        var results = [];
+        var country =  get_country(country_name);
+        var touching = country.get_touching_names();
+        for (var i = 0; i < touching.length; i++){
+            test_country = get_country(touching[i]);
+            if (!test_country.is_owned_by(player)){
                 results.push(test_country);
             }
         }
@@ -179,10 +316,6 @@ var game = function(name, countries, players){
             var result = actions[arg_array[0]].action.apply(null, arg_array.slice(1));
             if (result){
                 this.action_history.push(arg_array);
-                document.writeln('current action history: ')
-                    for (var i = 0; i < this.action_history.length; i++){
-                        document.writeln('  '+this.action_history[i]);
-                    }
                 return true;
             } else {
                 return false;
@@ -233,7 +366,6 @@ var game = function(name, countries, players){
             this.move_history = j.move_history;
             name = j.name;
             countries = [];
-            for (var x in j.countries){document.writeln('  '+x);}
             for (var i = 0; i < j.countries.length; i++){
                 var c = country();
                 c.dejasonify(j.countries[i]);
@@ -264,14 +396,35 @@ document.writeln(north_america.get_ascii());
 var na = north_america;
 var t = function(msg){document.writeln(msg)};
 
+t('Action Suggestions');
 t(na.suggest_action([]));
-t(na.suggest_action(['move']));
-t(na.suggest_action(['move', 'tom']));
-t(na.suggest_action(['move', 'tom', 'usa']));
-t(na.suggest_action(['move', 'tom', 'usa', 'mexico']));
-t(na.suggest_action(['move', 'tom', 'usa', 'mexico', 7]));
+t('Fortify Suggestions');
+t(na.suggest_action(['fortify']));
+t(na.suggest_action(['fortify', 'tom']));
+t(na.suggest_action(['fortify', 'tom', 'usa']));
+t(na.suggest_action(['fortify', 'tom', 'usa', 'mexico']));
+t(na.suggest_action(['fortify', 'tom', 'usa', 'mexico', 7]));
 
-t(na.take_action(['move', 'tom', 'usa', 'mexico', 7]));
+t(na.take_action(['fortify', 'tom', 'usa', 'mexico', 7]));
+
+t('Reinforce Suggestions');
+t(na.suggest_action(['reinforce']));
+t(na.suggest_action(['reinforce', 'tom']));
+t(na.suggest_action(['reinforce', 'tom', 'usa']));
+t(na.suggest_action(['reinforce', 'tom', 'usa', 5]));
+
+t(na.take_action(['reinforce', 'tom', 'usa', 4]));
+
+t('attack Suggestions');
+t(na.suggest_action(['attack']));
+t(na.suggest_action(['attack', 'tom']));
+t(na.suggest_action(['attack', 'tom', 'usa']));
+t(na.suggest_action(['attack', 'tom', 'usa', 'canada']));
+t(na.suggest_action(['attack', 'tom', 'usa', 'canada', 3]));
+
+t(na.take_action(['attack', 'tom', 'usa', 'canada', 3]));
+
+
 
 document.writeln(north_america.get_ascii());
 
