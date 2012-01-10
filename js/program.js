@@ -7,8 +7,9 @@
 // This shouldn't actually be private! The closure is costing
 // us tons of memory I imagine? Country is really just a
 // convenience object for storing data, shouldn't every be used
-// by anything other than map
+// by anything other than game
 var country = function(name, connected_to){
+    // variables in constructor signature are private
 
     // These are private variables that weren't in the constructor signature
     var helper = function(player, num_troops){
@@ -18,11 +19,14 @@ var country = function(name, connected_to){
             'get_name' : function(){return name},
             'get_troops' : function(){return num_troops;},
             'get_owner' : function(){return player;},
-            'get_touching' : function(){return connected_to},
+            'get_touching_names' : function(){return connected_to},
             'is_owned_by' : function(in_player){return in_player == player},
             'is_touching' : function(to){
+                if (!(typeof to === 'string')){
+                    to = to.get_name();
+                }
                 for (var i = 0; i < connected_to.length; i++){
-                    if (connected_to[i] == to){
+                    if (connected_to[i] === to){
                         return true;
                     }
                 }
@@ -48,13 +52,19 @@ var country = function(name, connected_to){
                     'connected_to' : connected_to
                 }
                 return j;
+            },
+            'dejasonify' : function(j){
+                name = j.name;
+                player = j.player;
+                num_troops = j.num_troops;
+                connected_to = j.connected_to;
             }
         };
     };
     return helper(null, null)
 };
 
-var map = function(name, countries, players){
+var game = function(name, countries, players){
     // private variables
     actions = {
         'move' : {
@@ -69,16 +79,22 @@ var map = function(name, countries, players){
                     var to_suggest = [];
                     for (var i = 0; i < owned.length; i++){
                         if (owned[i].get_troops() > 1){
-                            var gobat = get_countries_owned_by_and_touching(player, owned[i]);
-                            if (get_countries_owned_by_and_touching(player, owned[i]).length > 0){
-                                to_suggest.push(owned[i]);
+                            var gobat = get_countries_owned_by_and_touching(player, owned[i].get_name());
+                            if (get_countries_owned_by_and_touching(player, owned[i].get_name()).length > 0){
+                                to_suggest.push(owned[i].get_name());
                             }
                         }
                     }
                     return to_suggest;
                 },
                 function(player, from){
-                    return get_countries_owned_by_and_touching(player, from);
+                    var results = [];
+                    var gobat = get_countries_owned_by_and_touching(player, from);
+                    for (var i = 0; i < gobat.length; i++){
+                        results.push(gobat[i].get_name());
+                    }
+                    return results;
+
                 },
                 function(player, from, to){
                     var troops = get_country(from).get_troops();
@@ -95,11 +111,13 @@ var map = function(name, countries, players){
             action : function(player, from, to, how_many){
                 //todo: cache the countries; don't look for them on each line
                 // todo: add if the move is allowed at this turn stage etc.
-                if (!(get_country(from).is_owned_by(player) && get_country(to).is_owned_by(player))){return false;}
-                if (how_many > get_country(from).get_troops() - 1){return false;}
-                if (!(get_country(from).is_touching(to))){return false;}
-                get_country(from).set_state(player, get_country(from).get_troops() - how_many);
-                get_country(to).set_state(player, get_country(to).get_troops() + how_many);
+                from_c = get_country(from);
+                to_c = get_country(to);
+                if (!(from_c.is_owned_by(player) && to_c.is_owned_by(player))){return false;}
+                if (how_many > from_c.get_troops() - 1){return false;}
+                if (!(from_c.is_touching(to_c.get_name()))){return false;}
+                from_c.set_state(player, from_c.get_troops() - how_many);
+                to_c.set_state(player, to_c.get_troops() + how_many);
                 return true;
             }
         }
@@ -114,12 +132,14 @@ var map = function(name, countries, players){
         }
         return countries_owned;
     };
-    var get_countries_owned_by_and_touching = function(player, country){
+    var get_countries_owned_by_and_touching = function(player, country_name){
         var results = [];
-        var touching = get_country(country).get_touching();
+        var country = get_country(country_name);
+        var touching = country.get_touching_names();
         for (var i = 0; i < touching.length; i++){
-            if (get_country(touching[i]).is_owned_by(player)){
-                results.push(get_country(touching[i]));
+            test_country = get_country(touching[i])
+            if (test_country.is_owned_by(player)){
+                results.push(test_country);
             }
         }
         return results;
@@ -156,7 +176,17 @@ var map = function(name, countries, players){
         },
         take_action : function(arg_array){
             if (arg_array.length < 1){return false;}
-            return actions[arg_array[0]].action.apply(null, arg_array.slice(1));
+            var result = actions[arg_array[0]].action.apply(null, arg_array.slice(1));
+            if (result){
+                this.action_history.push(arg_array);
+                document.writeln('current action history: ')
+                    for (var i = 0; i < this.action_history.length; i++){
+                        document.writeln('  '+this.action_history[i]);
+                    }
+                return true;
+            } else {
+                return false;
+            }
         },
         add_new_country : function(name, connected_to_array){
             var new_country = country(name, connected_to_array);
@@ -179,12 +209,46 @@ var map = function(name, countries, players){
             }
             return s;
         },
+        action_history : [],
+        base_state_json : {},
+        whose_turn : null,
+        turn_phase : null,
+        jsonify : function(){
+            // todo: jsonify method
+            j = {};
+            j.action_history = this.action_history;
+            j.base_state_json = this.base_state_json;
+            j.whose_turn = this.whose_turn;
+            j.turn_phase = this.turn_phase;
+            j.name = name;
+            j.players = players;
+            j.countries = [];
+            for (var i = 0; i < countries.length; i++){
+                j.countries.push(countries[i].jsonify());
+            }
+            return j;
+        },
+        dejsonify : function(j){
+            this.base_state_json = j
+            this.move_history = j.move_history;
+            name = j.name;
+            countries = [];
+            for (var x in j.countries){document.writeln('  '+x);}
+            for (var i = 0; i < j.countries.length; i++){
+                var c = country();
+                c.dejasonify(j.countries[i]);
+                countries.push(c);
+            }
+            players = j.players;
+            this.whose_turn = j.whose_turn;
+            this.turn_phase = j.turn_phase;
+        },
     };
 };
 
 document.writeln();
 
-var north_america = map('North America', [], ['tomb', 'ryan']);
+var north_america = game('North America', [], ['tomb', 'ryan']);
 
 north_america.add_new_country('canada', ['usa']);
 north_america.add_new_country('usa', ['canada', 'mexico']);
@@ -200,16 +264,23 @@ document.writeln(north_america.get_ascii());
 var na = north_america;
 var t = function(msg){document.writeln(msg)};
 
-//t(na.suggest_action([]));
-//t(na.suggest_action(['move']));
-//t(na.suggest_action(['move', 'tom']));
-//t(na.suggest_action(['move', 'tom', 'usa']));
-//t(na.suggest_action(['move', 'tom', 'usa', 'mexico']));
-//t(na.suggest_action(['move', 'tom', 'usa', 'mexico', 7]));
+t(na.suggest_action([]));
+t(na.suggest_action(['move']));
+t(na.suggest_action(['move', 'tom']));
+t(na.suggest_action(['move', 'tom', 'usa']));
+t(na.suggest_action(['move', 'tom', 'usa', 'mexico']));
+t(na.suggest_action(['move', 'tom', 'usa', 'mexico', 7]));
 
 t(na.take_action(['move', 'tom', 'usa', 'mexico', 7]));
 
 document.writeln(north_america.get_ascii());
 
+document.writeln(JSON.stringify(na.jsonify()));
+
+var reconstituted = game(null, [], []);
+document.writeln(reconstituted);
+reconstituted.dejsonify(na.jsonify());
+document.writeln(reconstituted.get_ascii());
+document.writeln(JSON.stringify(reconstituted.jsonify()));
 
 document.writeln('finished');
