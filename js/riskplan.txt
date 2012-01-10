@@ -1,0 +1,26 @@
+One object that has:
+ -serializing methods
+ -closure to do data-hiding
+ -stores state of game (turn, current board)
+ -stores start state of game
+ -player move functions (each function has:
+   -function describing changes to board state
+   -whether the client can do it itself
+   -what inputs are required, enough for command line client
+ -stores every move made so far
+ -making a move with the client causes the move to be attempted
+   on a server-side object during the next move which requires server
+
+Helper Functions:
+ -very basic display method?
+
+
+Goals:
+Object that can be used to play from node cmd line
+Command line interface for playing
+  (requires text display function, input functions)
+Command line implementing secure moves such as attacking separately
+  (requiring jsonification, reconstitution, etc)
+Graphical display of map in browser
+Graphical interaction with map in browser
+
