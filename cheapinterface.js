@@ -7,29 +7,53 @@ var create_button = function(label, action){
     button.setAttribute("type", "button");
     button.setAttribute("name", "namehere");
     button.setAttribute("value", label);
-    button.setAttribute("onclick", action)
+    button.onclick = action;
+    button.setAttribute("onclick", this.onclick)
     var span = document.getElementById("spanForStuff");
     var header = document.getElementById("header");
     document.body.insertBefore(button, span);
     span.appendChild(button);
 }
 
+var create_buttons_for_next = function(){
+    var responses = na.suggest_action(arg_array);
+    var make_callback = function(arg){
+        var args = [];
+        for (var i = 0; i < arg_array.length; i++){
+            args.push(arg_array[i]);
+        }
+        args.push(arg);
+        return function(){
+            na.suggest_action(args);
+        };
+    };
+    if (responses === true){
+        na.take_action(arg_array);
+        arg_array = []
+        t(na.get_ascii());
+    }else if(responses === undefined){
+        return false;
+    }else{
+        for (var i = 0; i < responses.length; i++){
+            var callback = make_callback(responses[i]);
+            create_button(responses[i], callback);
+        }
+    }
+};
 
 var arg_array = [];
 var start_stuff = function(){
-    initialize();
-    var responses = na.suggest_action();
-    create_button('asdf', "alert('test');");
+    initialize_risk();
+    create_button('asdf', function(){alert('test');});
+    create_buttons_for_next();
 }
 var na = null;
-var initialize = function(){
+var t = null;
+var initialize_risk = function(){
     var output = document.getElementById("output");
-    document.writeln(output);
-    document.writeln(output.innerHTML);
-        asdf;
-    var t = function(msg){output.innerHTML = output.innerHTML + '\n' + msg + '\n';};
+    t = function(msg){output.innerHTML = output.innerHTML + '\n' + msg + '\n';};
 
-    t();
+    t('\n');
 
     na = game('North America', [], ['tomb', 'ryan']);
 

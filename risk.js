@@ -155,8 +155,6 @@ var game = function(name, countries, players){
                 if (player === undefined){return false;}
                 if (country === undefined){return false;}
                 if (how_many === undefined){return false;}
-                document.writeln(country.get_troops());
-                document.writeln(how_many);
                 country.set_state(player, country.get_troops() + how_many);
                 return true;
             },
@@ -233,10 +231,10 @@ var game = function(name, countries, players){
                         attackers_lost++;
                     }
                 }
-                document.writeln('attacker rolls: '+attack_rolls);
-                document.writeln('defender rolls: '+defend_rolls);
-                document.writeln('attackers lost: '+attackers_lost);
-                document.writeln('defenders lost: '+defenders_lost);
+                //document.writeln('attacker rolls: '+attack_rolls);
+                //document.writeln('defender rolls: '+defend_rolls);
+                //document.writeln('attackers lost: '+attackers_lost);
+                //document.writeln('defenders lost: '+defenders_lost);
                 from.set_state(player, from.get_troops() - attackers_lost);
                 to.set_state(to.get_owner(), to.get_troops() - defenders_lost);
                 if (to.get_troops() === 0){
