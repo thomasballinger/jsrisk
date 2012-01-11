@@ -66,7 +66,7 @@ var country = function(name, connected_to){
 
 var game = function(name, countries, players){
     // private variables
-    actions = {
+    var actions = {
         'fortify' : {
             // soft stuff - what to suggest, info
             description : 'Move troops from one owned country to an adj. one',
@@ -99,7 +99,7 @@ var game = function(name, countries, players){
                 },
                 function(player, from, to){
                     var troops = get_country(from).get_troops();
-                    results = [];
+                    var results = [];
                     for (var i = 1; i < troops; i++){
                         results.push(i);
                     }
@@ -112,8 +112,8 @@ var game = function(name, countries, players){
             action : function(player, from, to, how_many){
                 //todo: cache the countries; don't look for them on each line
                 // todo: add if the move is allowed at this turn stage etc.
-                from_c = get_country(from);
-                to_c = get_country(to);
+                var from_c = get_country(from);
+                var to_c = get_country(to);
                 if (from_c === undefined){return false;}
                 if (to_c === undefined){return false;}
                 if (player === undefined){return false;}
@@ -143,18 +143,19 @@ var game = function(name, countries, players){
                 },
                 function(player, country){
                     var to_suggest = [];
-                    for (var i = 0; i < 10; i++){
+                    for (var i = 1; i < 10; i++){
                         to_suggest.push(i);
                     }
                     return to_suggest;
                 }
             ],
             action : function(player, country, how_many){
-                country = get_country(country);
+                var country = get_country(country);
                 if (!country.is_owned_by(player)){return false;}
                 if (player === undefined){return false;}
                 if (country === undefined){return false;}
                 if (how_many === undefined){return false;}
+                if (typeof how_many == 'string'){how_many = parseInt(how_many);}
                 country.set_state(player, country.get_troops() + how_many);
                 return true;
             },
@@ -189,7 +190,7 @@ var game = function(name, countries, players){
                 },
                 function(player, from, to){
                     var troops = get_country(from).get_troops();
-                    results = [];
+                    var results = [];
                     for (var i = 1; i < Math.min(troops, 4); i++){
                         results.push(i);
                     }
@@ -260,7 +261,7 @@ var game = function(name, countries, players){
         var country = get_country(country_name);
         var touching = country.get_touching_names();
         for (var i = 0; i < touching.length; i++){
-            test_country = get_country(touching[i])
+            var test_country = get_country(touching[i])
             if (test_country.is_owned_by(player)){
                 results.push(test_country);
             }
@@ -272,7 +273,7 @@ var game = function(name, countries, players){
         var country =  get_country(country_name);
         var touching = country.get_touching_names();
         for (var i = 0; i < touching.length; i++){
-            test_country = get_country(touching[i]);
+            var test_country = get_country(touching[i]);
             if (!test_country.is_owned_by(player)){
                 results.push(test_country);
             }
@@ -280,12 +281,15 @@ var game = function(name, countries, players){
         return results;
     }
     var get_country = function(country){
-        for (c in countries){
-            if (countries[c].get_name() == country){
+        for (var c in countries){
+            if (countries[c].get_name() === country){
                 return countries[c];
             }
         }
-        return undefined;
+        throw {
+            'name':'country not found!',
+            'msg':'get_country function can\'t find country in ' + countries + ' matching string '+country
+        };
     }
 
     // public methods
@@ -293,7 +297,7 @@ var game = function(name, countries, players){
         suggest_action : function(arg_array){
             var to_suggest = [];
             if (arg_array === undefined || arg_array.length == 0){
-                for (action in actions){
+                for (var action in actions){
                     if (actions[action].should_be_suggested()){
                         to_suggest.push(action);
                     }
@@ -325,7 +329,7 @@ var game = function(name, countries, players){
             countries.push(new_country);
         },
         set_country_state : function(name, player, num_troops){
-            c = get_country(name);
+            var c = get_country(name);
             if (c === undefined){return false;}
             return c.set_state(player, num_troops);
         },
@@ -346,7 +350,7 @@ var game = function(name, countries, players){
         turn_phase : null,
         jsonify : function(){
             // todo: jsonify method
-            j = {};
+            var j = {};
             j.action_history = this.action_history;
             j.base_state_json = this.base_state_json;
             j.whose_turn = this.whose_turn;
