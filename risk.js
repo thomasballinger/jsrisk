@@ -1,13 +1,7 @@
 // Risk in javascript
 // First project in javascript
 // planning for a client/server architecture
-//
 
-
-// This shouldn't actually be private! The closure is costing
-// us tons of memory I imagine? Country is really just a
-// convenience object for storing data, shouldn't every be used
-// by anything other than game
 var country = function(name, connected_to){
     // variables in constructor signature are private
 
@@ -65,7 +59,7 @@ var country = function(name, connected_to){
 };
 
 var game = function(name, countries, players){
-    // private variables
+	// All logic to run a risk game
     var actions = {
         'fortify' : {
             // soft stuff - what to suggest, info
@@ -110,14 +104,13 @@ var game = function(name, countries, players){
             // hard stuff - implementation of the action
             // actions return true or false depending on if they succeed
             action : function(player, from, to, how_many){
-                //todo: cache the countries; don't look for them on each line
-                // todo: add if the move is allowed at this turn stage etc.
                 var from_c = get_country(from);
                 var to_c = get_country(to);
                 if (from_c === undefined){return false;}
                 if (to_c === undefined){return false;}
                 if (player === undefined){return false;}
                 if (how_many === undefined){return false;}
+                if (typeof how_many === 'string'){how_many = parseInt(how_many);}
                 if (!(from_c.is_owned_by(player) && to_c.is_owned_by(player))){return false;}
                 if (how_many > from_c.get_troops() - 1){return false;}
                 if (!(from_c.is_touching(to_c.get_name()))){return false;}
@@ -206,6 +199,7 @@ var game = function(name, countries, players){
                 if (from === undefined){return false;}
                 if (to === undefined){return false;}
                 if (how_many === undefined){return false;}
+                if (typeof how_many === 'string'){how_many = parseInt(how_many);}
                 var attacking = how_many;
                 var defending = Math.min(to.get_troops(), 2);
                 var attack_rolls = [];
@@ -232,10 +226,6 @@ var game = function(name, countries, players){
                         attackers_lost++;
                     }
                 }
-                //document.writeln('attacker rolls: '+attack_rolls);
-                //document.writeln('defender rolls: '+defend_rolls);
-                //document.writeln('attackers lost: '+attackers_lost);
-                //document.writeln('defenders lost: '+defenders_lost);
                 from.set_state(player, from.get_troops() - attackers_lost);
                 to.set_state(to.get_owner(), to.get_troops() - defenders_lost);
                 if (to.get_troops() === 0){
@@ -246,7 +236,6 @@ var game = function(name, countries, players){
             }
         }
     };
-
     var get_countries_owned = function(player){
         var countries_owned = [];
         for (var i = 0; i < countries.length; i++){

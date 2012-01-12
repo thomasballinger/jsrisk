@@ -58,8 +58,11 @@ var initialize_risk = function(){
     na.set_country_state('mexico', 'tom', 6);
 
     t(na.get_ascii());
+};
 
-    t('Action Suggestions');
+var test = function(){
+	
+	t('Action Suggestions');
     t(na.suggest_action([]));
     t('Fortify Suggestions');
     t(na.suggest_action(['fortify']));
@@ -99,5 +102,5 @@ var initialize_risk = function(){
     t(reconstituted.get_ascii());
     t(JSON.stringify(reconstituted.jsonify()));
 
-    t('finished');
-}
+    t('finished test');
+};
