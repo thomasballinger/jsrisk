@@ -34,9 +34,20 @@ Country.prototype = {
     },
 };
 
-var game = function(name, countries, players){
-    // All logic to run a risk game
-    var actions = {
+var Game = function(name){
+    this.name = name;
+    this.countries = [];             // array of country objects
+    this.players = [];               // array of player names
+    this.actionHistory = [];         // array of moves from lastSecureJSON
+    this.lastSecureJsonString = null;// stringified object from server
+    this.whoseTurn = null;           // player name
+    this.turnPhase = null;           // can be 'reinforce', 'attack',
+                                     //   'freemove' or 'fortify'
+    this.lastAttack = null;          // object describing last attack
+};
+
+Game.prototype = {
+    actions : {
         'fortify' : {
             // soft stuff - what to suggest, info
             description : 'Move troops from one owned country to an adj. one',
@@ -44,14 +55,14 @@ var game = function(name, countries, players){
             shouldBeSuggested : function(){return true;},
             requiresServer : false,
             argSuggestFunctions : [
-                function(){return players;},
+                function(){return this.players;},
                 function(player){
-                    var owned = getCountriesOwned(player);
+                    var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
                     for (var i = 0; i < owned.length; i++){
                         if (owned[i].numTroops > 1){
-                            var gobat = getCountriesOwnedByAndTouching(player, owned[i].name);
-                            if (getCountriesOwnedByAndTouching(player, owned[i].name).length > 0){
+                            var gobat = this.getCountriesOwnedByAndTouching(player, owned[i].name);
+                            if (this.getCountriesOwnedByAndTouching(player, owned[i].name).length > 0){
                                 toSuggest.push(owned[i].name);
                             }
                         }
@@ -60,7 +71,7 @@ var game = function(name, countries, players){
                 },
                 function(player, from){
                     var results = [];
-                    var gobat = getCountriesOwnedByAndTouching(player, from);
+                    var gobat = this.getCountriesOwnedByAndTouching(player, from);
                     for (var i = 0; i < gobat.length; i++){
                         results.push(gobat[i].name);
                     }
@@ -68,7 +79,7 @@ var game = function(name, countries, players){
 
                 },
                 function(player, from, to){
-                    var troops = getCountry(from).numTroops;
+                    var troops = this.getCountry(from).numTroops;
                     var results = [];
                     for (var i = 1; i < troops; i++){
                         results.push(i);
@@ -80,8 +91,8 @@ var game = function(name, countries, players){
             // hard stuff - implementation of the action
             // actions return true or false depending on if they succeed
             action : function(player, from, to, howMany){
-                var fromC = getCountry(from);
-                var toC = getCountry(to);
+                var fromC = this.getCountry(from);
+                var toC = this.getCountry(to);
                 if (fromC === undefined){return false;}
                 if (toC === undefined){return false;}
                 if (player === undefined){return false;}
@@ -101,9 +112,9 @@ var game = function(name, countries, players){
             shouldBeSuggested : function(){return true;},
             requiresServer : false,
             argSuggestFunctions : [
-                function(){return players;},
+                function(){return this.players;},
                 function(player){
-                    var owned = getCountriesOwned(player);
+                    var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
                     for (var i = 0; i < owned.length; i++){
                         toSuggest.push(owned[i].name)
@@ -119,7 +130,7 @@ var game = function(name, countries, players){
                 }
             ],
             action : function(player, country, howMany){
-                var country = getCountry(country);
+                var country = this.getCountry(country);
                 if (!country.isOwnedBy(player)){return false;}
                 if (player === undefined){return false;}
                 if (country === undefined){return false;}
@@ -135,13 +146,13 @@ var game = function(name, countries, players){
             shouldBeSuggested : function(){return true;},
             requiresServer : true,
             argSuggestFunctions : [
-                function(){return players;},
+                function(){return this.players;},
                 function(player){
-                    var owned = getCountriesOwned(player);
+                    var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
                     for (var i = 0; i < owned.length; i++){
                         if (owned[i].numTroops > 1){
-                            if (getCountriesNotOwnedByAndTouching(player, owned[i].name).length > 0){
+                            if (this.getCountriesNotOwnedByAndTouching(player, owned[i].name).length > 0){
                                 toSuggest.push(owned[i].name);
                             }
                         }
@@ -150,7 +161,7 @@ var game = function(name, countries, players){
                 },
                 function(player, from){
                     var results = [];
-                    var gcnobat = getCountriesNotOwnedByAndTouching(player, from);
+                    var gcnobat = this.getCountriesNotOwnedByAndTouching(player, from);
                     for (var i = 0; i < gcnobat.length; i++){
                         results.push(gcnobat[i].name);
                     }
@@ -158,7 +169,7 @@ var game = function(name, countries, players){
 
                 },
                 function(player, from, to){
-                    var troops = getCountry(from).numTroops;
+                    var troops = this.getCountry(from).numTroops;
                     var results = [];
                     for (var i = 1; i < Math.min(troops, 4); i++){
                         results.push(i);
@@ -167,8 +178,8 @@ var game = function(name, countries, players){
                 },
             ],
             action : function(player, from, to, howMany){
-                from = getCountry(from);
-                to = getCountry(to);
+                from = this.getCountry(from);
+                to = this.getCountry(to);
                 if (!from.isOwnedBy(player)){return false;}
                 if (to.isOwnedBy(player)){return false;}
                 if (player === undefined){return false;}
@@ -209,137 +220,113 @@ var game = function(name, countries, players){
 					to.numTroops = attacking - attackersLost;
 					from.numTroops = from.numTroops - attacking;
                 }
+                this.lastAttack = {
+                    from          : from.name,
+                    to            : to.name,
+                    numAttackers  : attacking,
+                    numDeffenders : defending,
+                    attackRolls   : attackRolls,
+                    defendRolls   : defendRolls,
+                    attackersLost : attackersLost,
+                    defenderLost  : defendersLost,
+                    captured      : (to.numTroops === 0),
+                };
                 return true;
-            }
-        }
-    };
-    var getCountriesOwned = function(player){
+            },
+        },
+    },
+    getCountriesOwned : function(player){
         var countriesOwned = [];
-        for (var i = 0; i < countries.length; i++){
-            if (countries[i].isOwnedBy(player)){
-                countriesOwned.push(countries[i]);
+        for (var i = 0; i < this.countries.length; i++){
+            if (this.countries[i].isOwnedBy(player)){
+                countriesOwned.push(this.countries[i]);
             }
         }
         return countriesOwned;
-    };
-    var getCountriesOwnedByAndTouching = function(player, countryName){
+    },
+    getCountriesOwnedByAndTouching : function(player, countryName){
         var results = [];
-        var country = getCountry(countryName);
+        var country = this.getCountry(countryName);
         var touching = country.connectedTo;
         for (var i = 0; i < touching.length; i++){
-            var testCountry = getCountry(touching[i])
+            var testCountry = this.getCountry(touching[i])
             if (testCountry.isOwnedBy(player)){
                 results.push(testCountry);
             }
         }
         return results;
-    }
-    var getCountriesNotOwnedByAndTouching = function(player, countryName){
+    },
+    getCountriesNotOwnedByAndTouching : function(player, countryName){
         var results = [];
-        var country =  getCountry(countryName);
+        var country =  this.getCountry(countryName);
         var touching = country.connectedTo;
         for (var i = 0; i < touching.length; i++){
-            var testCountry = getCountry(touching[i]);
+            var testCountry = this.getCountry(touching[i]);
             if (!testCountry.isOwnedBy(player)){
                 results.push(testCountry);
             }
         }
         return results;
-    }
-    var getCountry = function(country){
-        for (var c in countries){
-            if (countries[c].name === country){
-                return countries[c];
+    },
+    getCountry : function(country){
+        for (var c in this.countries){
+            if (this.countries[c].name === country){
+                return this.countries[c];
             }
         }
         throw {
             'name':'country not found!',
-            'msg':'getCountry function can\'t find country in ' + countries + ' matching string '+country
+            'msg':'this.getCountry function can\'t find country in ' + this.countries + ' matching string '+country
         };
-    }
+    },
 
-    // public methods
-    return {
-        suggestAction : function(argArray){
-            var toSuggest = [];
-            if (argArray === undefined || argArray.length == 0){
-                for (var action in actions){
-                    if (actions[action].shouldBeSuggested()){
-                        toSuggest.push(action);
-                    }
+    suggestAction : function(argArray){
+        var toSuggest = [];
+        if (argArray === undefined || argArray.length == 0){
+            for (var action in this.actions){
+                if (this.actions[action].shouldBeSuggested()){
+                    toSuggest.push(action);
                 }
-                return toSuggest;
-            } else if (argArray.length > 0 ){
-                action = argArray[0];
-                if (actions[action].argSuggestFunctions.length < argArray.length){
-                    return true;
-                };
-                return actions[action].argSuggestFunctions[argArray.length-1].apply(null, argArray.slice(1));
-            } else {
-                throw {name: 'Logic Error', message: 'neg length?'};
             }
-        },
-        takeAction : function(argArray){
-            if (argArray.length < 1){return false;}
-            var result = actions[argArray[0]].action.apply(null, argArray.slice(1));
-            if (result){
-                this.actionHistory.push(argArray);
+            return toSuggest;
+        } else if (argArray.length > 0 ){
+            action = argArray[0];
+            if (this.actions[action].argSuggestFunctions.length < argArray.length){
                 return true;
-            } else {
-                return false;
-            }
-        },
-        addNewCountry : function(name, connectedToArray){
-            var newCountry = new Country(name, connectedToArray);
-            countries.push(newCountry);
-        },
-        setCountryState : function(name, player, numTroops){
-            var c = getCountry(name);
-            c.player = player
-		    c.numTroops = numTroops;
-        },
-        toString : function(){
-            return name;
-        },
-        getAscii : function(){
-            var s = name;
-            s = s + '\n countries:';
-            for (var i = 0; i < countries.length; i++){
-                s = s + '\n  ' + countries[i].getAscii();
-            }
-            return s;
-        },
-        actionHistory : [],
-        baseStateJson : {},
-        whoseTurn : null,
-        turnPhase : null,
-        jsonify : function(){
-            // todo: jsonify method
-            var j = {};
-            j.actionHistory = this.actionHistory;
-            j.baseStateJson = this.baseStateJson;
-            j.whoseTurn = this.whoseTurn;
-            j.turnPhase = this.turnPhase;
-            j.name = name;
-            j.players = players;
-            j.countries = [];
-            for (var i = 0; i < countries.length; i++){
-                j.countries.push(JSON.stringify(countries[i]));
-            }
-            return j;
-        },
-        dejsonify : function(j){
-            this.baseStateJson = j
-            this.moveHistory = j.moveHistory;
-            name = j.name;
-            countries = [];
-            for (var i = 0; i < j.countries.length; i++){
-                c = JSON.parse(j.countries[i]);
-                countries.push(c);
-            }
-            players = j.players;
-            this.whoseTurn = j.whoseTurn;
-            this.turnPhase = j.turnPhase;
-        },
-    };
+            };
+            return this.actions[action].argSuggestFunctions[argArray.length-1].apply(this, argArray.slice(1));
+        } else {
+            throw {name: 'Logic Error', message: 'neg length?'};
+        }
+    },
+    takeAction : function(argArray){
+        if (argArray.length < 1){return false;}
+        var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
+        if (result){
+            this.actionHistory.push(argArray);
+            return true;
+        } else {
+            return false;
+        }
+    },
+    addNewCountry : function(name, connectedToArray){
+        var newCountry = new Country(name, connectedToArray);
+        this.countries.push(newCountry);
+    },
+    setCountryState : function(name, player, numTroops){
+        var c = this.getCountry(name);
+        c.player = player
+        c.numTroops = numTroops;
+    },
+    toString : function(){
+        return name;
+    },
+    getAscii : function(){
+        var s = name;
+        s = s + '\n countries:';
+        for (var i = 0; i < this.countries.length; i++){
+            s = s + '\n  ' + this.countries[i].getAscii();
+        }
+        return s;
+    },
 };

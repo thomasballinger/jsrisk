@@ -47,7 +47,9 @@ var initializeRisk = function(){
 
     t('\n');
 
-    na = game('North America', [], ['tom', 'ryan']);
+    na = new Game('North America');
+
+    na.players = ['tom', 'ryan']
 
     na.addNewCountry('canada', ['usa']);
     na.addNewCountry('usa', ['canada', 'mexico']);
