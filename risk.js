@@ -44,9 +44,17 @@ var Game = function(name){
     this.turnPhase = null;           // can be 'reinforce', 'attack',
                                      //   'freemove' or 'fortify'
     this.lastAttack = null;          // object describing last attack
+    this.reinforcementsToPlace = 0;  // reinforcements to place
+    this.fortifyMovesToMake = 0;  // reinforcements to place
+    this.fortifyMovesAllowed = 1;
 };
 
 Game.prototype = {
+    endTurn : function(){
+        this.whoseTurn = this.player[(this.player.indexOf(this.whoseTurn) + 1) % this.players.length];
+        this.fortifyMovesToMake = this.fortifyMovesAllowed;
+        this.giveReinforcements();
+    },
     actions : {
         'fortify' : {
             // soft stuff - what to suggest, info
@@ -93,6 +101,11 @@ Game.prototype = {
             action : function(player, from, to, howMany){
                 var fromC = this.getCountry(from);
                 var toC = this.getCountry(to);
+
+                if (this.fortifyMovesToMake < 1){return false;}
+                if (this.turnPhase != 'fortify'){return false;}
+                if (this.whoseTurn != player){return false;}
+
                 if (fromC === undefined){return false;}
                 if (toC === undefined){return false;}
                 if (player === undefined){return false;}
@@ -103,13 +116,21 @@ Game.prototype = {
                 if (!(fromC.isTouching(toC.name))){return false;}
                 fromC.numTroops = fromC.numTroops - howMany;
                 toC.numTroops = toC.numTroops + howMany;
+
+                this.fortifyMovesToMake = this.fortifyMovesToMake - 1;
+                if (this.fortifyMovesToMake < 1){
+                    this.endTurn();
+                }
                 return true;
             }
         },
         'reinforce' : {
             description : 'add an additional troop to a country you control',
             args : ['player', 'country', 'howMany'],
-            shouldBeSuggested : function(){return true;},
+            shouldBeSuggested : function(){
+                if (this.turnPhase == 'reinforce'){return true;}
+                return false;
+            },
             requiresServer : false,
             argSuggestFunctions : [
                 function(){return this.players;},
@@ -131,19 +152,70 @@ Game.prototype = {
             ],
             action : function(player, country, howMany){
                 var country = this.getCountry(country);
+
+                if (this.reinforcementsToPlace < howMany){return false;}
+                if (this.turnPhase != 'reinforce'){return false;}
+                if (this.whoseTurn != player){return false;}
+
                 if (!country.isOwnedBy(player)){return false;}
                 if (player === undefined){return false;}
                 if (country === undefined){return false;}
                 if (howMany === undefined){return false;}
                 if (typeof howMany == 'string'){howMany = parseInt(howMany);}
                 country.numTroops = country.numTroops + howMany;
+
+                this.reinforcementsToPlace = this.reinforcementsToPlace - howMany;
+                if (this.reinforcementsToPlace < 1){
+                    this.turnPhase = 'attack'
+                }
                 return true;
+            },
+        },
+        'done' : {
+            description : 'finish phase without taking any more actions',
+            args : [],
+            shouldBeSuggested : function(){
+                if (this.turnPhase == 'attack'){return true;}
+                if (this.turnPhase == 'freemove'){return true;}
+                if (this.turnPhase == 'fortify'){return true;}
+                if (this.turnPhase == 'reinforce'){return false;}
+                return false;
+            },
+            requiresServer : true,
+            action : function(player){
+                if (player != this.whoseTurn){return False}
+                if (this.turnPhase == 'attack'){
+                    this.turnPhase = 'fortify';
+                    return true;
+                }else if (this.turnPhase == 'fortify'){
+                    this.endTurn();
+                    return true;
+                }else if (this.turnPhase == 'reinforce'){
+                    if (this.reinforcementsToPlace > 0){
+                        return false;
+                    }
+                    return true;
+                }else if (this.turnPhase == 'freemove'){
+                    this.turnPhase == 'attack';
+                    return true;
+                }
             },
         },
         'attack' : {
             description : 'attack a country from an adjacent country you control',
             args : ['player', 'from', 'to', 'howMany'],
-            shouldBeSuggested : function(){return true;},
+            shouldBeSuggested : function(){
+                var player = this.whoseTurn;
+                var owned = this.getCountriesOwned(player);
+                for (var i = 0; i < owned.length; i++){
+                    if (owned[i].numTroops > 1){
+                        if (this.getCountriesNotOwnedByAndTouching(player, owned[i].name).length > 0){
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
             requiresServer : true,
             argSuggestFunctions : [
                 function(){return this.players;},
@@ -231,6 +303,55 @@ Game.prototype = {
                     defenderLost  : defendersLost,
                     captured      : (to.numTroops === 0),
                 };
+                if (from.numTroops > 1){
+                    this.turnStage = 'freemove';
+                }
+                return true;
+            },
+        },
+        'freemove' : {
+            // soft stuff - what to suggest, info
+            description : 'Move troops from attacking country to newly captured country immediately after a successful attack',
+            args : ['player', 'howMany'],
+            shouldBeSuggested : function(){
+                if (this.lastAttack && this.lastAttack.captured){return true;}
+                return false;
+            },
+            requiresServer : false,
+            argSuggestFunctions : [
+                function(){return this.players;},
+                function(player){
+                    var troops = this.getCountry(this.lastAttack.from).numTroops;
+                    var results = [];
+                    for (var i = 1; i < troops; i++){
+                        results.push(i);
+                    }
+                    return results;
+                },
+            ],
+
+            // hard stuff - implementation of the action
+            // actions return true or false depending on if they succeed
+            action : function(player, howMany){
+                var fromC = this.getCountry(this.lastAttack.from);
+                var toC = this.getCountry(this.lastAttack.to);
+
+                if (this.lastAttack === undefined){return false;}
+                if (player === undefined){return false;}
+                if (howMany === undefined){return false;}
+
+                if (!this.lastAttack.captured){return false;}
+                if (fromC.getTroops() < 2){return false;}
+                if (this.turnPhase != 'freemove'){return false;}
+                if (this.whoseTurn != player){return false;}
+
+                if (typeof howMany === 'string'){howMany = parseInt(howMany);}
+                if (!(fromC.isOwnedBy(player) && toC.isOwnedBy(player))){return false;}
+                if (howMany > fromC.numTroops - 1){return false;}
+                fromC.numTroops = fromC.numTroops - howMany;
+                toC.numTroops = toC.numTroops + howMany;
+
+                this.turnPhase = 'attack';
                 return true;
             },
         },
@@ -284,7 +405,7 @@ Game.prototype = {
         var toSuggest = [];
         if (argArray === undefined || argArray.length == 0){
             for (var action in this.actions){
-                if (this.actions[action].shouldBeSuggested()){
+                if (this.actions[action].shouldBeSuggested.call(this)){
                     toSuggest.push(action);
                 }
             }
@@ -309,6 +430,14 @@ Game.prototype = {
             return false;
         }
     },
+    getPredictedReinforcements : function(player){
+        var countries = getCountriesOwned(player);
+        return countries.length
+    },
+    giveReinforcements : function(player){
+        this.reinforcementsToPlace = getPredictedReinforcements(player);
+        return true;
+    },
     addNewCountry : function(name, connectedToArray){
         var newCountry = new Country(name, connectedToArray);
         this.countries.push(newCountry);
@@ -319,14 +448,16 @@ Game.prototype = {
         c.numTroops = numTroops;
     },
     toString : function(){
-        return name;
+        return '[Country '+name+']';
     },
     getAscii : function(){
         var s = name;
+        s = s + '\n '+this.whoseTurn+"'s turn, "+this.turnPhase+" phase";
         s = s + '\n countries:';
         for (var i = 0; i < this.countries.length; i++){
             s = s + '\n  ' + this.countries[i].getAscii();
         }
         return s;
     },
-};
+}
+
