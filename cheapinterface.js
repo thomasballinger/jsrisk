@@ -85,7 +85,7 @@ var initializeRisk = function(){
     t(na.getAscii());
 };
 
-var test = function(){
+var testActions = function(){
     
     t('Action Suggestions');
     t(na.suggestAction([]));

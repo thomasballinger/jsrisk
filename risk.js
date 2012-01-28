@@ -1,17 +1,18 @@
 // Risk in javascript
 // First project in javascript
 // planning for a client/server architecture
+//
 
 var Country = function(name, connectedTo){
     this.name = name;
     this.connectedTo = connectedTo;
-}
+};
 
 Country.prototype = {
     numTroops : 0,
     player : null,
     isOwnedBy : function(inPlayer){
-		return inPlayer === this.player
+		return inPlayer === this.player;
 	},
     isTouching : function(country){
         if (country.name){
@@ -48,8 +49,47 @@ var Game = function(name){
     this.fortifyMovesToMake = 0;  // reinforcements to place
     this.fortifyMovesAllowed = 1;
 };
-
+Game.clientReconstitute = function(s){
+    g = JSON.parse(s);
+    return g;
+};
+Game.getUpdatedServerGame = function(client_s, player, server_s){
+    // the player should be authenticated to submit updates in client_s
+    // client_s and server_s should be strings from the same game originally
+    var client_g = JSON.parse(client_s);
+    var client_last_secure = JSON.parse(client_g.lastSecureJsonString);
+    var server_g = JSON.parse(server_s);
+    if (client_g.name != server_g.name){
+        // warning! Names don't match!
+        return 'Game names don\'t match!';
+    }
+    if (!dataEquivalent(client_last_secure, server_g)){
+        // warning! Client's last secure state doesn't match last secure state!
+        return 'Whoops!';
+    }
+    if (!server_g.attemptMoves(client_g.actionHistory)){
+        // moves not legal!
+        return 'Moves not legal! Can\'t complete';
+    }
+    client_g.lastSecureJsonString = null;
+    if (!dataEquivalent(server_g, client_g)){
+        // moves do not result in expected state!
+        return 'moves do not result in expected state!';
+    }
+    server_g.actionHistory = [];
+    server_g.lastSecureJsonString = JSON.stringify(server_g);
+    return server_g;
+};
 Game.prototype = {
+    // attempts moves in movesArray taken by a single player, returns true/false
+    attemptMoves : function(movesArray, player){
+            for (var i = 0; i<moveArray.length; i++){
+                if (player !=  movesArray[i][1] || !this.takeAction(movesArray[i])){
+                    return false;
+                }
+            }
+            return true;
+        },
     endTurn : function(){
         this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;
@@ -153,7 +193,7 @@ Game.prototype = {
                     var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
                     for (var i = 0; i < owned.length; i++){
-                        toSuggest.push(owned[i].name)
+                        toSuggest.push(owned[i].name);
                     }
                     return toSuggest;
                 },
@@ -181,7 +221,7 @@ Game.prototype = {
 
                 this.reinforcementsToPlace = this.reinforcementsToPlace - howMany;
                 if (this.reinforcementsToPlace < 1){
-                    this.turnPhase = 'attack'
+                    this.turnPhase = 'attack';
                 }
                 return true;
             },
@@ -467,10 +507,10 @@ Game.prototype = {
         c.numTroops = numTroops;
     },
     toString : function(){
-        return '[Country '+name+']';
+        return '[Country '+this.name+']';
     },
     getAscii : function(){
-        var s = name;
+        var s = this.name;
         s = s + '\n '+this.whoseTurn+"'s turn, "+this.turnPhase+" phase";
 		if (this.turnPhase == 'reinforce'){s = s + '\n  troops to place: '+this.reinforcementsToPlace;}
 		if (this.turnPhase == 'fortify'){s = s + '\n  fortify moves left: '+this.fortifyMovesToMake;}
@@ -481,3 +521,6 @@ Game.prototype = {
         return s;
     },
 }
+
+var exports; //does nothing if already defined because javascript is weird
+if (exports){exports.Game = Game;}
