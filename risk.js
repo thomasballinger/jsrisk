@@ -51,7 +51,7 @@ var Game = function(name){
 
 Game.prototype = {
     endTurn : function(){
-        this.whoseTurn = this.player[(this.player.indexOf(this.whoseTurn) + 1) % this.players.length];
+        this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;
         this.giveReinforcements();
     },
@@ -60,10 +60,15 @@ Game.prototype = {
             // soft stuff - what to suggest, info
             description : 'Move troops from one owned country to an adj. one',
             args : ['player', 'from', 'to', 'howMany'],
-            shouldBeSuggested : function(){return true;},
+            shouldBeSuggested : function(){
+				if (this.turnPhase != 'fortify'){
+					return false;
+				}
+				return true;
+			},
             requiresServer : false,
             argSuggestFunctions : [
-                function(){return this.players;},
+                function(){return [this.whoseTurn];},
                 function(player){
                     var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
@@ -133,7 +138,7 @@ Game.prototype = {
             },
             requiresServer : false,
             argSuggestFunctions : [
-                function(){return this.players;},
+                function(){return [this.whoseTurn];},
                 function(player){
                     var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
@@ -144,7 +149,7 @@ Game.prototype = {
                 },
                 function(player, country){
                     var toSuggest = [];
-                    for (var i = 1; i < 10; i++){
+                    for (var i = 1; i < this.reinforcementsToPlace+1; i++){
                         toSuggest.push(i);
                     }
                     return toSuggest;
@@ -173,7 +178,10 @@ Game.prototype = {
         },
         'done' : {
             description : 'finish phase without taking any more actions',
-            args : [],
+            args : ['player'],
+            argSuggestFunctions : [
+                function(){return [this.whoseTurn];},
+			],
             shouldBeSuggested : function(){
                 if (this.turnPhase == 'attack'){return true;}
                 if (this.turnPhase == 'freemove'){return true;}
@@ -205,6 +213,7 @@ Game.prototype = {
             description : 'attack a country from an adjacent country you control',
             args : ['player', 'from', 'to', 'howMany'],
             shouldBeSuggested : function(){
+				if (this.turnPhase != 'attack'){return false;}
                 var player = this.whoseTurn;
                 var owned = this.getCountriesOwned(player);
                 for (var i = 0; i < owned.length; i++){
@@ -218,7 +227,7 @@ Game.prototype = {
             },
             requiresServer : true,
             argSuggestFunctions : [
-                function(){return this.players;},
+                function(){return [this.whoseTurn];},
                 function(player){
                     var owned = this.getCountriesOwned(player);
                     var toSuggest = [];
@@ -319,7 +328,7 @@ Game.prototype = {
             },
             requiresServer : false,
             argSuggestFunctions : [
-                function(){return this.players;},
+                function(){return [this.whoseTurn];},
                 function(player){
                     var troops = this.getCountry(this.lastAttack.from).numTroops;
                     var results = [];
@@ -431,11 +440,11 @@ Game.prototype = {
         }
     },
     getPredictedReinforcements : function(player){
-        var countries = getCountriesOwned(player);
+        var countries = this.getCountriesOwned(player);
         return countries.length
     },
-    giveReinforcements : function(player){
-        this.reinforcementsToPlace = getPredictedReinforcements(player);
+    giveReinforcements : function(){
+        this.reinforcementsToPlace = this.getPredictedReinforcements(this.whoseTurn);
         return true;
     },
     addNewCountry : function(name, connectedToArray){
@@ -453,6 +462,8 @@ Game.prototype = {
     getAscii : function(){
         var s = name;
         s = s + '\n '+this.whoseTurn+"'s turn, "+this.turnPhase+" phase";
+		if (this.turnPhase == 'reinforce'){s = s + '\n  troops to place: '+this.reinforcementsToPlace;}
+		if (this.turnPhase == 'fortify'){s = s + '\n  fortify moves left: '+this.fortifyMovesToMake;}
         s = s + '\n countries:';
         for (var i = 0; i < this.countries.length; i++){
             s = s + '\n  ' + this.countries[i].getAscii();
@@ -460,4 +471,3 @@ Game.prototype = {
         return s;
     },
 }
-

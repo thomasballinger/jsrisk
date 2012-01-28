@@ -68,6 +68,9 @@ var initializeRisk = function(){
     na.setCountryState('canada', 'ryan', 4);
     na.setCountryState('mexico', 'tom', 6);
 
+	na.giveReinforcements();
+	na.fortifyMovesToMake = na.fortifyMovesAllowed;
+
     t(na.getAscii());
 };
 
@@ -100,8 +103,6 @@ var test = function(){
     t(na.suggestAction(['attack', 'tom', 'usa', 'canada', 3]));
 
     t(na.takeAction(['attack', 'tom', 'usa', 'canada', 3]));
-
-
 
     t(na.getAscii());
 
