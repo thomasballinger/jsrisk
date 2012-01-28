@@ -54,6 +54,7 @@ Game.prototype = {
         this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;
         this.giveReinforcements();
+		this.turnPhase = 'reinforce';
     },
     actions : {
         'fortify' : {
@@ -64,7 +65,16 @@ Game.prototype = {
 				if (this.turnPhase != 'fortify'){
 					return false;
 				}
-				return true;
+				var owned = this.getCountriesOwned(this.whoseTurn);
+				for (var i = 0; i < owned.length; i++){
+					if (owned[i].numTroops > 1){
+						var gobat = this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name);
+						if (this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name).length > 0){
+							return true;
+						}
+                    }
+				}
+				return false;
 			},
             requiresServer : false,
             argSuggestFunctions : [

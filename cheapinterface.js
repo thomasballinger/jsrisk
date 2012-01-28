@@ -1,6 +1,5 @@
 // cheap interface using the suggest capabilities
 
-this.interfaceButtons = [];
 
 var createButton = function(label, action, idOfParent){
     var button = document.createElement('input');
@@ -22,9 +21,16 @@ var createButtonsForNextChoice = function(choice){
     var options;
     if (choice === undefined){
         argArray = [];
-        options = na.suggestAction(argArray);
+        if (window.user == na.whoseTurn){
+            options = na.suggestAction(argArray);
+        } else {
+            options = [];
+        }
     }else{
         argArray.push(choice);
+        if (argArray.length == 1){
+            argArray.push(window.user);
+        }
         options = na.suggestAction(argArray);
     }
     if (options === true){
@@ -41,16 +47,15 @@ var createButtonsForNextChoice = function(choice){
 var argArray = [];
 var startStuff = function(){
     initializeRisk();
-    //createButton('display', "t(na.getAscii());", "spanForLongTerm");
-    createButtonsForNextChoice();
+    createButton('display', "t(na.getAscii());", "spanForLongTerm");
     document.getElementById("spanForLongTerm").removeChild(document.getElementById("start"));
 }
 var na = null;
 var t = null;
 var initializeRisk = function(){
     var output = document.getElementById("output");
-    //t = function(msg){output.innerHTML = output.innerHTML + msg + '\n';};
-    t = function(msg){output.innerHTML = msg;};
+    t = function(msg){output.innerHTML = output.innerHTML + msg + '\n';};
+    window.t = function(msg){output.innerHTML = msg;};
 
     t('\n');
 
@@ -68,15 +73,21 @@ var initializeRisk = function(){
     na.setCountryState('canada', 'ryan', 4);
     na.setCountryState('mexico', 'tom', 6);
 
-	na.giveReinforcements();
-	na.fortifyMovesToMake = na.fortifyMovesAllowed;
+    na.giveReinforcements();
+    na.fortifyMovesToMake = na.fortifyMovesAllowed;
+
+    window.user = undefined;
+    
+    for (var i = 0; i < na.players.length; i++){
+        createButton('log in as '+na.players[i], 'window.user = "'+na.players[i]+'"; t("logged in as '+na.players[i]+'"); argArray=[]; createButtonsForNextChoice()', 'spanForChangingPlayer')
+    }
 
     t(na.getAscii());
 };
 
 var test = function(){
-	
-	t('Action Suggestions');
+    
+    t('Action Suggestions');
     t(na.suggestAction([]));
     t('Fortify Suggestions');
     t(na.suggestAction(['fortify']));
