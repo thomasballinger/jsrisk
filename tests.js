@@ -8,7 +8,7 @@ var t = function(msg){
 };
 
 var getGame = function(){
-    var na = new risk.Game('North America');
+    var na = new risk.Game({name:'North America'});
 
     na.players = ['tom', 'ryan'];
     na.whoseTurn = 'tom';
@@ -72,21 +72,30 @@ var testActions = function(){
 var testSerialization = function(){
     na = getGame();
     t(na);
-    new_na = JSON.parse(JSON.stringify(na));
+    new_na = new risk.Game(JSON.parse(JSON.stringify(na)));
     t(new_na);
     t(new_na.takeAction(['reinforce', 'tom', 'usa', 2]));
     t(new_na.takeAction(['done', 'tom']));
     t(new_na);
-    return
-    server_s = JSON.stringify(na);
-    client_g = risk.Game.clientReconstitute(server_s);
+};
+var testClientServerSerialization = function(){
+    na = getGame();
+    var server_s = JSON.stringify(na);
+    var client_g = risk.Game.clientReconstitute(server_s);
+    t(client_g.takeAction(['reinforce', 'tom', 'usa', 2]));
+    t(client_g.takeAction(['done', 'tom']));
     t(client_g);
-    t(na);
-    risk.Game.getUpdatedServerGame(client_s, player, server_s)
+    var client_s = JSON.stringify(client_g);
+    var server_g = risk.Game.getUpdatedServerGame(client_s, 'tom', server_s);
+    t(server_g);
+    var new_client_g = risk.Game.clientReconstitute(JSON.stringify(server_g));
+    t(new_client_g);
+    return;
 };
 var testCreationAndDisplay = function(){
     var na = getGame();
     t(na);
     t(na.getAscii());
 };
-testSerialization();
+//testSerialization();
+testClientServerSerialization();

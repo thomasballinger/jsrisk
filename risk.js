@@ -1,11 +1,35 @@
 // Risk in javascript
 // First project in javascript
 // planning for a client/server architecture
-//
 
-var Country = function(name, connectedTo){
-    this.name = name;
-    this.connectedTo = connectedTo;
+var dataEquivalent = function(a, b){
+    var prop;
+    for (prop in a){
+        if (!a.hasOwnProperty(prop)){continue;}
+        if (b[prop] === undefined){return false;}
+        if (typeof a[prop] === 'object'){
+            if (!dataEquivalent(a[prop], b[prop])){
+                return false;
+            }
+        } else if (typeof a[prop] === 'function'){
+            if (a[prop].toString() != b[prop].toString()){
+                return false;
+            }
+        } else {
+            if (a[prop] != b[prop]){return false;}
+        }
+    }
+    return true;
+};
+
+var Country = function(obj){
+    if (typeof obj != 'undefined'){
+        for (var prop in obj){
+            if (obj.hasOwnProperty(prop)){
+                this[prop] = obj[prop];
+            }
+        }
+    }
 };
 
 Country.prototype = {
@@ -35,8 +59,8 @@ Country.prototype = {
     },
 };
 
-var Game = function(name){
-    this.name = name;
+var Game = function(obj){
+    this.name = 'unnamed';
     this.countries = [];             // array of country objects
     this.players = [];               // array of player names
     this.actionHistory = [];         // array of moves from lastSecureJSON
@@ -48,26 +72,43 @@ var Game = function(name){
     this.reinforcementsToPlace = 0;  // reinforcements to place
     this.fortifyMovesToMake = 0;  // reinforcements to place
     this.fortifyMovesAllowed = 1;
+    
+    if (typeof obj != 'undefined'){
+        for (var prop in obj){
+            if (obj.hasOwnProperty(prop)){
+                if (prop == 'countries'){
+                    for (var i = 0; i < obj.countries.length; i++){
+                        this.countries.push(new Country(obj.countries[i]));
+                    }
+                }else{
+                    this[prop] = obj[prop];
+                }
+            }
+        }
+    }
 };
 Game.clientReconstitute = function(s){
-    g = JSON.parse(s);
+    g = new Game(JSON.parse(s));
+    if (g.lastSecureJsonString == null){
+        g.lastSecureJsonString = JSON.stringify(g);
+    }
     return g;
 };
 Game.getUpdatedServerGame = function(client_s, player, server_s){
     // the player should be authenticated to submit updates in client_s
     // client_s and server_s should be strings from the same game originally
-    var client_g = JSON.parse(client_s);
-    var client_last_secure = JSON.parse(client_g.lastSecureJsonString);
-    var server_g = JSON.parse(server_s);
+    var client_g = new Game(JSON.parse(client_s));
+    var client_last_secure_g = new Game(JSON.parse(client_g.lastSecureJsonString));
+    var server_g = new Game(JSON.parse(server_s));
     if (client_g.name != server_g.name){
         // warning! Names don't match!
         return 'Game names don\'t match!';
     }
-    if (!dataEquivalent(client_last_secure, server_g)){
+    if (!dataEquivalent(client_last_secure_g, server_g)){
         // warning! Client's last secure state doesn't match last secure state!
-        return 'Whoops!';
+        return 'Whoops! Client\'s last secure state doesn\'t match last secure state!';
     }
-    if (!server_g.attemptMoves(client_g.actionHistory)){
+    if (!server_g.attemptMoves(client_g.actionHistory, player)){
         // moves not legal!
         return 'Moves not legal! Can\'t complete';
     }
@@ -83,13 +124,13 @@ Game.getUpdatedServerGame = function(client_s, player, server_s){
 Game.prototype = {
     // attempts moves in movesArray taken by a single player, returns true/false
     attemptMoves : function(movesArray, player){
-            for (var i = 0; i<moveArray.length; i++){
-                if (player !=  movesArray[i][1] || !this.takeAction(movesArray[i])){
-                    return false;
-                }
+        for (var i = 0; i<movesArray.length; i++){
+            if (player !=  movesArray[i][1] || !this.takeAction(movesArray[i])){
+                return false;
             }
-            return true;
-        },
+        }
+        return true;
+    },
     endTurn : function(){
         this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;
@@ -462,8 +503,9 @@ Game.prototype = {
 
     suggestAction : function(argArray){
         var toSuggest = [];
-        if (argArray === undefined || argArray.length == 0){
-            for (var action in this.actions){
+        var action
+        if (argArray === undefined || argArray.length === 0){
+            for (action in this.actions){
                 if (this.actions[action].shouldBeSuggested.call(this)){
                     toSuggest.push(action);
                 }
@@ -498,7 +540,7 @@ Game.prototype = {
         return true;
     },
     addNewCountry : function(name, connectedToArray){
-        var newCountry = new Country(name, connectedToArray);
+        var newCountry = new Country({'name':name, 'connectedTo':connectedToArray});
         this.countries.push(newCountry);
     },
     setCountryState : function(name, player, numTroops){

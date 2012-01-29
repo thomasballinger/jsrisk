@@ -59,7 +59,7 @@ var initializeRisk = function(){
 
     t('\n');
 
-    na = new Game('North America');
+    na = new Game({name:'North America'});
 
     na.players = ['tom', 'ryan'];
     na.whoseTurn = 'tom';
