@@ -65,6 +65,7 @@ var Game = function(obj){
     this.players = [];               // array of player names
     this.actionHistory = [];         // array of moves from lastSecureJSON
     this.lastSecureJsonString = null;// stringified object from server
+    this.allowSecureMoves = false;
     this.whoseTurn = null;           // player name
     this.turnPhase = null;           // can be 'reinforce', 'attack',
                                      //   'freemove' or 'fortify'
@@ -157,7 +158,7 @@ Game.prototype = {
 				}
 				return false;
 			},
-            requiresServer : false,
+            isSecure : false,
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
                 function(player){
@@ -227,7 +228,7 @@ Game.prototype = {
                 if (this.turnPhase == 'reinforce'){return true;}
                 return false;
             },
-            requiresServer : false,
+            isSecure : false,
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
                 function(player){
@@ -280,7 +281,7 @@ Game.prototype = {
                 if (this.turnPhase == 'reinforce'){return false;}
                 return false;
             },
-            requiresServer : true,
+            isSecure : true,
             action : function(player){
                 if (player != this.whoseTurn){return False}
                 if (this.turnPhase == 'attack'){
@@ -316,7 +317,7 @@ Game.prototype = {
                 }
                 return false;
             },
-            requiresServer : true,
+            isSecure : true,
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
                 function(player){
@@ -417,7 +418,7 @@ Game.prototype = {
                 if (this.lastAttack && this.lastAttack.captured){return true;}
                 return false;
             },
-            requiresServer : false,
+            isSecure : false,
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
                 function(player){
@@ -523,6 +524,9 @@ Game.prototype = {
     },
     takeAction : function(argArray){
         if (argArray.length < 1){return false;}
+        if (this.actions[argArray[0]].isSecure){
+            if (!this.allowSecureMoves){return false;}
+        }
         var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
         if (result){
             this.actionHistory.push(argArray);
