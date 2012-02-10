@@ -19,6 +19,7 @@ Ideally requests are somehow routed around
 make move
 
 Requests routed to node.js:
+
 * `GET /gamelogic/game/northamerica/attack/12/14/3`
   Make this authenticated move
     * get stored game
