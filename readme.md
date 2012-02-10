@@ -3,10 +3,14 @@ jsrisk
 
 Todo:
 
-* learn about using the same code for server/client side 
-  (since that was the point)
-* Object that implements all actions, can be used to play from node cmd line
-* Command line interface for playing
+* Set up authentication for node server and REST requests
+  * may want something like everyauth, have to talk to node for every auth
+* Learn how to hook up node.js, mongrel2 and brubeck
+* Learn some brubeck, do views there
+
+Maybe Todo:
+
+* Write a command line interface for playing to test game
   (requires text display function, wrappers for input suggestion)
 * Command line implementing secure moves such as attacking separately
   (requiring jsonification, reconstitution, etc)
