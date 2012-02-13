@@ -22,7 +22,24 @@ Use mongrel2 to route logic requests to node, page requests to brubeck
 Ideally requests are somehow routed around
 make move
 
-Requests routed to node.js:
+Requests routed to node.js
+---------------------------
+These are just database wrappers - is this even a good idea?
+Does this abstraction gain us anything at all?  Should other methods
+call these by url, or just call the methods directly?
+
+* `GET /gamestorage/game/northamerica/`
+  Responds with game
+    * get secure game based on name
+    * respond with game
+    * this URL should be used to get
+* `POST /gamestorage/game/northamerica/`
+  Update with json
+    * Check for authentication - this should be one of our own
+        talking to another of our own - dev secret required
+    * this URL should be used by other views to store
+
+These are more interesting, have to implement logic
 
 * `GET /gamelogic/game/northamerica/attack/12/14/3`
   Make this authenticated move
@@ -66,10 +83,6 @@ Requests routed to node.js:
     * add action to action history
     * respond with game
     * store game
-* `GET /gamelogic/game/northamerica/`
-  Responds with game
-    * get secure game based on name
-    * respond with game
 * `POST /gamelogic/game/northamerica/update`
   * save game given game
     * get stored game
