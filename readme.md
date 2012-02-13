@@ -3,8 +3,11 @@ jsrisk
 
 Todo:
 
+* learn some mongodb and get it storing data
+* basic REST requests in node - update and retrieve
 * Set up authentication for node server and REST requests
   * may want something like everyauth, have to talk to node for every auth
+* implement rest of REST queries
 * Learn how to hook up node.js, mongrel2 and brubeck
 * Learn some brubeck, do views there
 
@@ -18,9 +21,8 @@ Maybe Todo:
 * Graphical interaction with map in browser
 
 Overall Plan:
-Use mongrel2 to route logic requests to node, page requests to brubeck
-Ideally requests are somehow routed around
-make move
+Use mongrel2 to route logic requests to node, page requests to brubeck.
+node will talk to mongodb for storing gamelogic.
 
 Requests routed to node.js
 ---------------------------
