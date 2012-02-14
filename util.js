@@ -40,8 +40,37 @@ var testDataEquivalent = function(){
         console.log(dataEquivalent(x, bads[i]));
     }
 };
-
+var choose = function(list, n){
+    if (n === undefined){n = 1;}
+    result = [];
+    for (var i = 0; i < n; i++){
+        index = Math.floor(Math.random()*list.length);
+        result = result.concat(list.splice(index, 1));
+    }
+    return result;
+};
+var createRandomPronounceableWord = function(){
+    var getConsonant = function(){return choose('b c d f g h j k l m n p r s t v w z'.split(' '));};
+    var getVowel = function(){return choose('a e i o u y'.split(' '));};
+    maxSyllables = 4;
+    frontConsonantChance = 0.5;
+    backConsonantChance = 0.5;
+    w = '';
+    numSyllables = Math.floor(Math.random()*(maxSyllables-1)+1);
+    for (var i=0; i<numSyllables; i++){
+        s = '';
+        if (Math.random() < frontConsonantChance){s = s + getConsonant();}
+        s = s + getVowel();
+        if (Math.random() < backConsonantChance){s = s + getConsonant();}
+        w = w + s;
+    }
+    return w;
+};
 //testDataEquivalent();
 
 var exports;
-if (exports) {exports.dataEquivalent = dataEquivalent;}
+if (exports) {
+	exports.dataEquivalent = dataEquivalent;
+	exports.createRandomPronounceableWord = createRandomPronounceableWord;
+	exports.choose = choose;
+}
