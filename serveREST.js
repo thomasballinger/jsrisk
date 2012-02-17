@@ -1,30 +1,35 @@
-var mongo = require('mongodb');
+var express = require('express');
+
 var risk = require('./risk');
 var util = require('./util');
-var express = require('./express');
+var database = require('./database')
 
 var app = express.createServer();
+
 app.configure(function(){
     app.use(app.router);
     app.use(express.errorHandler({
         dumpExceptions: true, showStack: true}));
+    app.use(express.bodyParser());
 });
-var db = new mongo.Db('risk', new mongo.Server('localhost', 27017, {}), {});
-var getGameByName = function(name, callback){
-    db.open(function(){
-        db.collection('games', function(err, collection){
-            var stuff = collection.find({}).toArray(function(err, docs){
-		if (err) {throw error;}
-		var game = docs[0];
-		callback(docs);
-	    });
-        });
-    });
-};
-app.get('/gamestorage/game/:name/', function(req, res, next){
-    getGameByName(req.params.name, function(game){res.send(g);});
+app.get('/', function(req, res, next){
+    getAllGameNames(function(games){res.send(games);});
 });
-//app.post(/gamestorage/game/)
+ap.get('/login', function())
+// These are basic storage and retrival, for testing only
+app.get('/gamestorage/game/:name', function(req, res, next){
+    console.log('received request for game '+req.params.name);
+    getGameByName(req.params.name, function(game){res.send(game);});
+});
+app.post('/gamestorage/game/:name', function(req, res){
+    storeGameByName(req.params.name, req.body)
+    res.send(req.body);
+});
+// These are used for taking user-authorized actions
+app.post('/gamelogic/game/:game/')
+app.get('/404', function(req, res) {
+    res.send('NOT FOUND '+req.url);
+});
 
 var createNewBasicGame = function(){
     g = new risk.Game({name:util.createRandomPronounceableWord()});
@@ -45,32 +50,7 @@ var createNewBasicGame = function(){
 
     return g;
 };
-var populateTestDatabase = function(){
-    var db = new mongo.Db('risk', new mongo.Server('localhost', 27017, {}), {});
-    db.open(function() {
-        // callback for when open call returns
-        console.log('open call has returned!');
-        //db.remove({});
-        db.collection('games', function(err,collection) {
-            // function to call when request for collection returns
-            var i = 0;
-            var howMany = 10;
-            var addGameToDbAsync = function(){
-                if (i >= howMany){return;}
-                console.log('inserting game '+i+' of '+howMany);
-                collection.insert(createRandomBasicGame(), function(){
-                    // function to call when insert returns
-                });
-                i++;
-                //process.nextTick(addGameToDbAsync);
-                addGameToDbAsync();
-            };
-            addGameToDbAsync(10);
-            console.log('finished collection callback');
-            db.close();
-        });
-        console.log('finished open callback');
-    });
-    console.log('done populating database');
-};
-populateTestDatabase();
+
+var port = 8124
+app.listen(port);
+console.log('listening at '+port)

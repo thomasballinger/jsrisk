@@ -98,4 +98,4 @@ var testCreationAndDisplay = function(){
     t(na.getAscii());
 };
 //testSerialization();
-testClientServerSerialization();
+//testClientServerSerialization();
