@@ -1,4 +1,7 @@
 mongo = require('mongodb');
+assert = require('assert')
+serveREST = require('serveREST')
+
 risk = require('./risk');
 util = require('./util');
 
@@ -49,4 +52,8 @@ var populateTestDatabase = function(){
     });
     console.log('done populating database');
 };
-populateTestDatabase();
+
+
+var tests = function(){
+    populateTestDatabase();
+
