@@ -12,7 +12,7 @@ var doSomethingWithGames = function(callback){
         client.collection('games', callback);
     });
 };
-var getGameByName = function(callback){
+var getGameByName = function(name, callback){
     doSomethingWithGames(function(err, collection){
         collection.find({'name':name}).toArray(function(err, results){
             console.log("game found");

@@ -4,6 +4,8 @@ var risk = require('./risk');
 var util = require('./util');
 var database = require('./database')
 
+database.connect()
+
 var app = express.createServer();
 
 app.configure(function(){
@@ -13,13 +15,13 @@ app.configure(function(){
     app.use(express.bodyParser());
 });
 app.get('/', function(req, res, next){
-    getAllGameNames(function(games){res.send(games);});
+    database.getAllGameNames(function(names){res.send(names);});
 });
-ap.get('/login', function())
+app.get('/login', function(){})
 // These are basic storage and retrival, for testing only
 app.get('/gamestorage/game/:name', function(req, res, next){
     console.log('received request for game '+req.params.name);
-    getGameByName(req.params.name, function(game){res.send(game);});
+    database.getGameByName(req.params.name, function(game){res.send(game);});
 });
 app.post('/gamestorage/game/:name', function(req, res){
     storeGameByName(req.params.name, req.body)
