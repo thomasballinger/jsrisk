@@ -44,22 +44,32 @@ call these by url, or just call the methods directly?
 These are more interesting, have to implement logic
 
 * `GET /gamelogic/game/northamerica/attack/12/14/3`
-  Make this authenticated move
+  Make this move of any kind
     * get stored game
-    * set allow_secure_moves on game to False
-    * take actions from action history of stored game
-    * set allow_secure_moves on game to True
-    * take requested action
-    * if requested action does not succeed: return failure
-    * set allow_secure_moves status on game to False
-    * set lastsecurejson to current game, stringified
-    * store secure game
+	* if move is safe:
+        * set allow_secure_moves on game to False
+        * take requested action
+        * if requested action does not succeed: return failure
+    * else (move is unsafe)
+		* set allow_secure_moves status on game to True
+        * take requested action
+        * if requested action does not succeed: return failure
+        * set lastsecurejson to current game, stringified
+		* set allow_secure_moves status on game to False
+    * store game
     * respond with game
+* `POST /gamelogic/game/northamerica/update`
+    * get stored secure game
+    * set allow_secure_moves on game to False
+    * take all actions in POSTed action history
+    * if requested actions do not succeed: return failure
+	* store game
+	* return True
 * `POST /gamelogic/game/northamerica/attack/12/14/3`
   Make all moves stored in this game plus this move
-    * get stored game
+    * get stored secure game
     * set allow_secure_moves on game to False
-    * take actions from action history of submitted game on stored game
+    * take actions from action history of submitted game on game
     * if states do not match: return failure
     * discard submitted game
     * set all_secure_moves on game to True
@@ -69,33 +79,12 @@ These are more interesting, have to implement logic
     * set lastsecurejson to current game, stringify
     * store secure game
     * respond with game
-* `POST /gamelogic/game/northamerica/update`
-  Make all moves stored in this game
 * `GET /gamelogic/game/northamerica/undo`
-  Responds with game from last secure string
+  Responds with game with all moves but the last made
 * `GET /gamelogic/newgame/name/northamerica/`
   Responds with new game
     * store game
     * respond with game
-* `GET /gamelogic/game/northamerica/reinforce/13/2`
-  Responds with game with action taken
-    * get stored game
-    * take requested action
-    * if requested action does not succeed: return failure, old game
-    * add action to action history
-    * respond with game
-    * store game
-* `POST /gamelogic/game/northamerica/update`
-  * save game given game
-    * get stored game
-    * set allow_secure_moves on game to False
-    * take actions from action history of submitted game
-       (do not clear history)
-    * if states do not match: return stored game
-    * if states match: respond with new game 
-
-Problem: what if several unauthenticated moves are made, but not saved,
-then a rest GET for an authenticated move is made? OH WELL
 
 Requests routed to Brubeck:
 * `/`
@@ -103,6 +92,6 @@ Requests routed to Brubeck:
 * `/about`
   static about page
 * `/login`
-  login? not sure how we're doing authentication
+  login? not sure how we are doing authentication
 * `game/northamerica/play`
   page where can play game with javascript

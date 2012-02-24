@@ -32,6 +32,7 @@ var getAllGameNames = function(callback){
        });
     });
 };
+//TODO: need saveGameByName
 exports.connect = connect;
 exports.getGameByName = getGameByName;
 exports.getAllGameNames = getAllGameNames;
