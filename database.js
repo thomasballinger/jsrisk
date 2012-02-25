@@ -8,14 +8,14 @@ var connect = function(){
 var doSomethingWithGames = function(callback){
     client.open(function(err, p_client){
         if (err) {throw err;}
-        console.log("about to do something with games in database");
+        //console.log("about to do something with games in database");
         client.collection('games', callback);
     });
 };
 var getGameByName = function(name, callback){
     doSomethingWithGames(function(err, collection){
         collection.find({'name':name}).toArray(function(err, results){
-            console.log("game found");
+            //console.log("game found");
             callback(results[0]);
         });
     });
@@ -23,7 +23,7 @@ var getGameByName = function(name, callback){
 var getAllGameNames = function(callback){
     doSomethingWithGames(function(err, collection){
        collection.find().toArray(function(err, results){
-           console.log("games found:");
+           //console.log("games found:");
            var names = [];
            for (i in results){
                names.push(results[i].name)
@@ -32,7 +32,14 @@ var getAllGameNames = function(callback){
        });
     });
 };
+var updateGameByName = function(name, game, callback){
+    doSomethingWithGames(function(err, collection){
+        collection.update({'name':name}, game);
+        callback();
+    });
+}
 //TODO: need saveGameByName
 exports.connect = connect;
 exports.getGameByName = getGameByName;
 exports.getAllGameNames = getAllGameNames;
+exports.updateGameByName = updateGameByName;

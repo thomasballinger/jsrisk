@@ -1,9 +1,9 @@
-mongo = require('mongodb');
-assert = require('assert')
-serveREST = require('serveREST')
+var mongo = require('mongodb');
+var assert = require('assert')
+var database = require('./database.js');
 
-risk = require('./risk');
-util = require('./util');
+var risk = require('./risk');
+var util = require('./util');
 
 var createRandomBasicGame = function(){
     g = new risk.Game({name:util.createRandomPronounceableWord()});
@@ -24,36 +24,59 @@ var createRandomBasicGame = function(){
 
     return g;
 };
-var populateTestDatabase = function(){
+var populateTestDatabase = function(callback){
     var db = new mongo.Db('risk', new mongo.Server('localhost', 27017, {}), {});
     db.open(function() {
         // callback for when open call returns
-        console.log('open call has returned!');
-        //db.remove({});
+        console.log('open call is running it\'s callback!');
         db.collection('games', function(err,collection) {
             // function to call when request for collection returns
+            collection.remove({});
             var i = 0;
             var howMany = 10;
-            var addGameToDbAsync = function(){
-                if (i >= howMany){return;}
+            for (i; i < howMany; i++){
                 console.log('inserting game '+i+' of '+howMany);
                 collection.insert(createRandomBasicGame(), function(){
                     // function to call when insert returns
                 });
-                i++;
-                //process.nextTick(addGameToDbAsync);
-                addGameToDbAsync();
-            };
-            addGameToDbAsync(10);
+            }
             console.log('finished collection callback');
             db.close();
+            callback()
+            console.log('just closed db');
         });
         console.log('finished open callback');
     });
-    console.log('done populating database');
+    console.log('got past db open call');
 };
 
 
 var tests = function(){
-    populateTestDatabase();
+    populateTestDatabase(function(){
+        console.log("Just finished initializing client");
+        database.connect();
+        database.getAllGameNames(function(names){
+            //console.log(names);
+            assert.equal(names.length, 10)
+            console.log('* Get game names test passed');
+        });
+        database.getAllGameNames(function(names){
+            database.getGameByName(names[0], function(x){assert.equal(x.name, names[0])})
+            console.log('* Get game by name test passed');
+        });
+        database.getAllGameNames(function(names){
+            var game = database.getGameByName(names[0], function(game){
+                game.customfield = 'asfd';
+                database.updateGameByName(names[0], game, function(){
+                    database.getGameByName(names[0], function(new_game){
+                        assert.equal(new_game.customfield, 'asfd');
+                        console.log('* Update game test passed');
+                    });
+                });
+            });
+        });
+        console.log('All tests passed!');
+    });
+};
 
+tests()
