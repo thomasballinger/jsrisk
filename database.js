@@ -1,3 +1,6 @@
+// Module implementing basic database manipulation
+// These are trusted commands, no authentication etc happens
+
 var mongo = require('mongodb');
 
 var host = 'localhost';

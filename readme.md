@@ -3,7 +3,8 @@ jsrisk
 
 Todo:
 
-* Nice tests for all simple database methods: update and retrieve
+* Nice tests for all simple database methods: DONE
+* Implementation of all simple database methods
 * Set up authentication for node server and REST requests
   * super simple would be ok 
 * implement rest of REST queries
@@ -12,6 +13,7 @@ Todo:
 
 Maybe Todo:
 
+* Write thorough tests for risk.js
 * Write a command line interface for playing to test game
   (requires text display function, wrappers for input suggestion)
 * Command line implementing secure moves such as attacking separately
@@ -25,7 +27,7 @@ node will talk to mongodb for storing gamelogic.
 
 Requests routed to node.js
 ---------------------------
-These are just database wrappers - is this even a good idea?
+khese are just database wrappers - is this even a good idea?
 Does this abstraction gain us anything at all?  Should other methods
 call these by url, or just call the methods directly?
 
