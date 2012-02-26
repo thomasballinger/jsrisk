@@ -66,6 +66,26 @@ var createRandomPronounceableWord = function(){
     }
     return w;
 };
+
+var createRandomBasicGame = function(){
+    g = new risk.Game({name:util.createRandomPronounceableWord()});
+    g.players = util.choose(['ryan', 'tom', 'andrew', 'israel'], 2);
+    g.addNewCountry('canada', ['usa']);
+    g.addNewCountry('usa', ['canada', 'mexico']);
+    g.addNewCountry('mexico', ['usa']);
+
+    // board setup
+    g.setCountryState('usa', g.players[0], 8);
+    g.setCountryState('canada', g.players[1], 4);
+    g.setCountryState('mexico', g.players[0], 6);
+
+    // TODO this should be in a Game method
+    // getting ready for first move
+    g.giveReinforcements();
+    g.fortifyMovesToMake = g.fortifyMovesAllowed;
+
+    return g;
+};
 //testDataEquivalent();
 
 var exports;
