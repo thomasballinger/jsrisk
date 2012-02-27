@@ -70,51 +70,104 @@ describe('database', function() {
         it('should store a game such that it is retrievable', function(done){
             var g = createGame('test', ['tom', 'ryan']);
             g.arbitraryAtt = 'asdf';
-            database.storeGame(g, function(){
-                database.getGameByName('test', function(game){
-                    assert.equal(game && game.arbitraryAtt, 'asdf');
-                    done();
-                });
-            });
+            database.storeGame(g, 
+				function(){
+					throw Error('Name already in database');
+					done();
+				}, 
+				function(){
+					database.getGameByName('test', function(game){
+						assert.equal(game && game.arbitraryAtt, 'asdf');
+						done();
+					});
+				}
+			);
         });
         it('should fail to store a game with a repeat name', function(done){
-            var g = createGame('test1', ['tom', 'ryan']);
-            assert.throw(database.storeGame(g, function(){}));
-            done();
-        });
-    });
+            var g = createGame('game1', ['tom', 'ryan']);
+            g.arbitraryAtt = 'asdf';
+			database.storeGame(g, 
+				function(){
+					assert.ok('correct callback called')
+					done();
+				}, 
+				function(){
+					console.log('success callback being called')
+					throw Error('Wrong code path taken');
+					done();
+				}
+			);
+		});
+	});
     describe('#removeGameByName()', function(){
         it('should remove a game from database', function(done){
-            database.removeGameByName('game1', function(){
-                database.getAllGameNames(function(list){
-                    assert.equal(list.length, 2);
-                    done();
-                });
-            });
+            database.removeGameByName('game1',
+				function(){
+					throw Error('Game with Name does not exist');
+					done();
+				},
+				function(){
+					database.getAllGameNames(function(list){
+						assert.equal(list.length, 2);
+						done();
+					});
+				}
+			);
         });
         it('should fail if game name does not exist', function(done){
-            assert.throw(database.removeGameByName('test', function(){}));
-            done();
+            database.removeGameByName('test',
+				function(){
+					assert.ok('correct callback called');
+					done();
+				},
+				function(){
+					database.getAllGameNames(function(list){
+						throw Error('Wrong code path taken');
+						done();
+					});
+				}
+			);
         });
     });
-    describe('#updateGame()', function(done){
+    describe('#updateGame()', function(){
         it('should update a game with arbitrary atts', function(done){
             var g = createGame('game1', ['tom', 'ryan']);
             g.arbitraryAtt = 'asdf';
-            database.updateGame(g, function(){
-                database.getGameByName('game1', function(game){
-                    assert.equal(game && game.arbitraryAtt, 'asfd');
-                    done();
-                });
-            });
+            database.updateGame(g, 
+				function(){
+					throw Error('Item to update does not exist');
+					done();
+				},
+				function(obj){
+					database.getGameByName('game1', function(game){
+						assert.equal(game && game.arbitraryAtt, 'asdf');
+						done();
+					});
+				}
+			);
         });
         it('should throw an error if name does not exist', function(done){
-            var g = createGame('nonexistantGame', ['tom', 'ryan']);
-            g.arbitraryAtt = 'asdf';
-            assert.throw(database.updateGame(g, function(){}));
-            done();
+            var g = createGame('test', ['tom', 'ryan']);
+            database.updateGame(g, 
+				function(){
+					assert.ok('Item to update does not exist')
+					done();
+				},
+				function(obj){
+					Error("Wrong code path taken")
+					done();
+				}
+			);
         });
     });
+	describe('#getAllGamesWithPlayer', function(){
+		it('should find all games a player is in', function(done){
+			database.getAllGamesWithPlayer('tom', function(games){
+				assert.equal(games.length, 2);
+				done();
+			});
+		});
+	});
 });
 				
 	//database.insertGame(db, createGame('test1', ['tom', 'ryan']));

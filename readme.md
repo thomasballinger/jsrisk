@@ -27,7 +27,7 @@ node will talk to mongodb for storing gamelogic.
 
 Requests routed to node.js
 ---------------------------
-khese are just database wrappers - is this even a good idea?
+These are just database wrappers - is this even a good idea?
 Does this abstraction gain us anything at all?  Should other methods
 call these by url, or just call the methods directly?
 
