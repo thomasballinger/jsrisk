@@ -4,7 +4,9 @@ jsrisk
 Todo:
 
 * Nice tests for all simple database methods: DONE
-* Implementation of all simple database methods
+* Implementation of all simple database methods: DONE
+* Nice tests for all restActions
+* Implementation of all restActions
 * Set up authentication for node server and REST requests
   * super simple would be ok 
 * implement rest of REST queries
