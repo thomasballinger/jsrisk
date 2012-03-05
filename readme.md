@@ -91,6 +91,7 @@ These are more interesting, have to implement logic
     * respond with game
 
 Requests routed to Brubeck:
+
 * `/`
   list all games
 * `/about`
