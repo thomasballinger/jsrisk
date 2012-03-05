@@ -36,6 +36,7 @@ var clearDatabase = function(collection, callback){
 var insertGame = function(g, collection, callback){
     collection.insert(g, function(){callback();});
 };
+/*
 describe('restActions', function() {
 	var setupStuff = 'can happen here';
 	beforeEach(function(done){
@@ -57,4 +58,31 @@ describe('restActions', function() {
 			});
 		});
 	});
+	describe('#makeMove()', function(){
+		it('should succeed in placing 1 reinforcement', function(done){
+			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 1], function(result){
+				assert.equal(result.getCountry('mexico').numTroops, 7);
+                done();
+			});
+		});
+	});
+	describe('#makeMove()', function(){
+		it('should fail in placing 4 reinforcement', function(done){
+			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 4], function(result){
+				assert.equal(false, result);
+                done();
+			});
+		});
+	});
+	describe('#makeMove()', function(){
+		it('should succeed in placing 2 reinforcements, then attacking', function(done){
+			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 2], function(result){
+				restActions.makeMove('tom', 'game1', ['attack', 'usa', 'canada', 3], function(result){
+					assert.notEqual(result.lastAttack, null);
+					done();
+				});
+			});
+		});
+	});
 });
+*/

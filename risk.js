@@ -1,26 +1,7 @@
 // Risk in javascript
 // First project in javascript
 // planning for a client/server architecture
-
-var dataEquivalent = function(a, b){
-    var prop;
-    for (prop in a){
-        if (!a.hasOwnProperty(prop)){continue;}
-        if (b[prop] === undefined){return false;}
-        if (typeof a[prop] === 'object'){
-            if (!dataEquivalent(a[prop], b[prop])){
-                return false;
-            }
-        } else if (typeof a[prop] === 'function'){
-            if (a[prop].toString() != b[prop].toString()){
-                return false;
-            }
-        } else {
-            if (a[prop] != b[prop]){return false;}
-        }
-    }
-    return true;
-};
+var util = require('./util');
 
 var Country = function(obj){
     if (typeof obj != 'undefined'){
@@ -36,8 +17,8 @@ Country.prototype = {
     numTroops : 0,
     player : null,
     isOwnedBy : function(inPlayer){
-		return inPlayer === this.player;
-	},
+        return inPlayer === this.player;
+    },
     isTouching : function(country){
         if (country.name){
             country = country.name;
@@ -60,6 +41,9 @@ Country.prototype = {
 };
 
 var Game = function(obj){
+    if (typeof obj == 'string'){
+        obj = JSON.parse(obj);
+    }
     this.name = 'unnamed';
     this.countries = [];             // array of country objects
     this.players = [];               // array of player names
@@ -89,54 +73,23 @@ var Game = function(obj){
     }
 };
 Game.clientReconstitute = function(s){
-    g = new Game(JSON.parse(s));
+    g = new Game(s);
     if (g.lastSecureJsonString == null){
         g.lastSecureJsonString = JSON.stringify(g);
     }
     return g;
 };
-Game.getUpdatedServerGame = function(client_s, player, server_s){
-    // the player should be authenticated to submit updates in client_s
-    // client_s and server_s should be strings from the same game originally
-    var client_g = new Game(JSON.parse(client_s));
-    var client_last_secure_g = new Game(JSON.parse(client_g.lastSecureJsonString));
-    var server_g = new Game(JSON.parse(server_s));
-    if (client_g.name != server_g.name){
-        // warning! Names don't match!
-        return 'Game names don\'t match!';
-    }
-    if (!dataEquivalent(client_last_secure_g, server_g)){
-        // warning! Client's last secure state doesn't match last secure state!
-        return 'Whoops! Client\'s last secure state doesn\'t match last secure state!';
-    }
-    if (!server_g.attemptMoves(client_g.actionHistory, player)){
-        // moves not legal!
-        return 'Moves not legal! Can\'t complete';
-    }
-    client_g.lastSecureJsonString = null;
-    if (!dataEquivalent(server_g, client_g)){
-        // moves do not result in expected state!
-        return 'moves do not result in expected state!';
-    }
-    server_g.actionHistory = [];
-    server_g.lastSecureJsonString = JSON.stringify(server_g);
-    return server_g;
+// The games are equivalent at every level, including secure saved states
+Game.areIdentical = function(game1, game2){
+    return util.dataEquivalent(game1, game2);
 };
+// The games are equivalent in 
 Game.prototype = {
-    // attempts moves in movesArray taken by a single player, returns true/false
-    attemptMoves : function(movesArray, player){
-        for (var i = 0; i<movesArray.length; i++){
-            if (player !=  movesArray[i][1] || !this.takeAction(movesArray[i])){
-                return false;
-            }
-        }
-        return true;
-    },
     endTurn : function(){
         this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;
         this.giveReinforcements();
-		this.turnPhase = 'reinforce';
+        this.turnPhase = 'reinforce';
     },
     actions : {
         'fortify' : {
@@ -144,20 +97,20 @@ Game.prototype = {
             description : 'Move troops from one owned country to an adj. one',
             args : ['player', 'from', 'to', 'howMany'],
             shouldBeSuggested : function(){
-				if (this.turnPhase != 'fortify'){
-					return false;
-				}
-				var owned = this.getCountriesOwned(this.whoseTurn);
-				for (var i = 0; i < owned.length; i++){
-					if (owned[i].numTroops > 1){
-						var gobat = this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name);
-						if (this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name).length > 0){
-							return true;
-						}
+                if (this.turnPhase != 'fortify'){
+                    return false;
+                }
+                var owned = this.getCountriesOwned(this.whoseTurn);
+                for (var i = 0; i < owned.length; i++){
+                    if (owned[i].numTroops > 1){
+                        var gobat = this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name);
+                        if (this.getCountriesOwnedByAndTouching(this.whoseTurn, owned[i].name).length > 0){
+                            return true;
+                        }
                     }
-				}
-				return false;
-			},
+                }
+                return false;
+            },
             isSecure : false,
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
@@ -215,9 +168,10 @@ Game.prototype = {
                 toC.numTroops = toC.numTroops + howMany;
 
                 this.fortifyMovesToMake = this.fortifyMovesToMake - 1;
-                if (this.fortifyMovesToMake < 1){
-                    this.endTurn();
-                }
+                //Disabled so player must make secure move "done" to end turn
+                //if (this.fortifyMovesToMake < 1){
+                //    this.endTurn();
+                //}
                 return true;
             }
         },
@@ -273,7 +227,7 @@ Game.prototype = {
             args : ['player'],
             argSuggestFunctions : [
                 function(){return [this.whoseTurn];},
-			],
+            ],
             shouldBeSuggested : function(){
                 if (this.turnPhase == 'attack'){return true;}
                 if (this.turnPhase == 'freemove'){return true;}
@@ -283,7 +237,7 @@ Game.prototype = {
             },
             isSecure : true,
             action : function(player){
-                if (player != this.whoseTurn){return False}
+                if (player != this.whoseTurn){return false}
                 if (this.turnPhase == 'attack'){
                     this.turnPhase = 'fortify';
                     return true;
@@ -305,7 +259,7 @@ Game.prototype = {
             description : 'attack a country from an adjacent country you control',
             args : ['player', 'from', 'to', 'howMany'],
             shouldBeSuggested : function(){
-				if (this.turnPhase != 'attack'){return false;}
+                if (this.turnPhase != 'attack'){return false;}
                 var player = this.whoseTurn;
                 var owned = this.getCountriesOwned(player);
                 for (var i = 0; i < owned.length; i++){
@@ -388,11 +342,6 @@ Game.prototype = {
                 }
                 from.numTroops = from.numTroops - attackersLost;
                 to.numTroops = to.numTroops - defendersLost;
-                if (to.numTroops === 0){
-                    to.player = player;
-					to.numTroops = attacking - attackersLost;
-					from.numTroops = from.numTroops - attacking;
-                }
                 this.lastAttack = {
                     from          : from.name,
                     to            : to.name,
@@ -404,8 +353,13 @@ Game.prototype = {
                     defenderLost  : defendersLost,
                     captured      : (to.numTroops === 0),
                 };
-                if (from.numTroops > 1){
-                    this.turnStage = 'freemove';
+                if (to.numTroops === 0){
+                    to.player = player;
+                    to.numTroops = attacking - attackersLost;
+                    from.numTroops = from.numTroops - attacking;
+                }
+                if (this.lastAttack.captured){
+                    this.turnPhase = 'freemove';
                 }
                 return true;
             },
@@ -524,16 +478,29 @@ Game.prototype = {
     },
     takeAction : function(argArray){
         if (argArray.length < 1){return false;}
-        if (this.actions[argArray[0]].isSecure){
+        var secure = (this.actions[argArray[0]].isSecure)
+        if (secure){
             if (!this.allowSecureMoves){return false;}
         }
         var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
-        if (result){
-            this.actionHistory.push(argArray);
-            return true;
+        if (!result){return false;}
+        if (secure){
+            this.actionHistory=[];
+            this.lastSecureJsonString = JSON.stringify(this)
         } else {
-            return false;
+            this.actionHistory.push(argArray);
         }
+        return true;
+    },
+    takeUnsecureActions : function(argArrayList){
+        var num_actions = argArrayList.length;
+        this.allowSecureMoves = false;
+        for (var i = 0; i<num_actions; i++){
+            var argArray = argArrayList[i];
+            var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
+            if (!result){return false;}
+        }
+        return true;
     },
     getPredictedReinforcements : function(player){
         var countries = this.getCountriesOwned(player);
@@ -558,8 +525,8 @@ Game.prototype = {
     getAscii : function(){
         var s = this.name;
         s = s + '\n '+this.whoseTurn+"'s turn, "+this.turnPhase+" phase";
-		if (this.turnPhase == 'reinforce'){s = s + '\n  troops to place: '+this.reinforcementsToPlace;}
-		if (this.turnPhase == 'fortify'){s = s + '\n  fortify moves left: '+this.fortifyMovesToMake;}
+        if (this.turnPhase == 'reinforce'){s = s + '\n  troops to place: '+this.reinforcementsToPlace;}
+        if (this.turnPhase == 'fortify'){s = s + '\n  fortify moves left: '+this.fortifyMovesToMake;}
         s = s + '\n countries:';
         for (var i = 0; i < this.countries.length; i++){
             s = s + '\n  ' + this.countries[i].getAscii();
@@ -569,4 +536,6 @@ Game.prototype = {
 }
 
 var exports; //does nothing if already defined because javascript is weird
-if (exports){exports.Game = Game;}
+if (exports){
+	exports.Game = Game;
+}

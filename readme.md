@@ -4,7 +4,8 @@ jsrisk
 Todo:
 
 * Nice tests for all simple database methods: DONE
-* Implementation of all simple database methods: DONE
+* Switch to node-restify instead of express for this project
+* Implementation of all simple database methods
 * Nice tests for all restActions
 * Implementation of all restActions
 * Set up authentication for node server and REST requests
@@ -15,7 +16,7 @@ Todo:
 
 Maybe Todo:
 
-* Write thorough tests for risk.js
+* Write thorough tests for risk.js DONE
 * Write a command line interface for playing to test game
   (requires text display function, wrappers for input suggestion)
 * Command line implementing secure moves such as attacking separately

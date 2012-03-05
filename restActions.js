@@ -1,6 +1,7 @@
 var risk = require('./risk');
 var util = require('./util');
 var database = require('./database')
+var assert = require('assert')
 
 
 // useful database methods:
@@ -23,13 +24,40 @@ var database = require('./database')
 exports.makeMove = function(player, gameName, actionList, callback){
 	database.getGameByName(gameName, function(game_json){
 		var game = new risk.Game(game_json);
-		console.log(game.getCountriesOwned());
-		callback(game);
+		assert.equal(game.allowSecureMoves, false);
+		if (game.actions[actionList].isSecure == false){
+			actionList.splice(0, 0, player);
+			var result = game.takeAction(actionList);
+			console.log('result of action '+actionsList);
+			console.log(result);
+			if (result == false){callback(false);}
+		} else if (game.actions[actionList].isSecure == true){
+			game.allowSecureMoves = true;
+			actionList.splice(0, 0, player);
+			var result = game.takeAction(actionList);
+			console.log('result of action '+actionsList);
+			console.log(result);
+			if (result == false){callback(false);}
+			game.allowSecureMoves = false
+			game.lastSecureJsonString = null
+			game.lastSecureJsonString = JSON.stringify(game)
+		} else {
+			throw Error();
+		}
+		database.updateGame(game, function(){throw Error();}, function(){});
+        callback(game);
 	});
 };
 
-exports.updateGame = function(player, game, callback){
-	callback(game);
+exports.updateGame = function(player, client_game_json, callback){
+	database.getGameByName(game.name, function(server_game_json){
+		var client_game = Game.getUpdatedServerGame(client_game_json);
+		var server_game = Game.clientReconstitute(server_game_json);
+		assert.equal(server_game.allowSecureMoves, false);
+		var moves = client_game.actionHistory;
+		database.updateGame(game, function(){throw Error;}, function(){callback(game);})
+		callback(game);
+	});
 };
 
 exports.updateGameAndMakeMove = function(player, game, actionList, callback){

@@ -1,45 +1,40 @@
 
-var dataEquivalent = function(a, b){
+var dataEquivalent = function(obj1, obj2, pass){
+	if (pass === undefined){pass = 'first';}
+	if (pass !== 'first' && pass !== 'second'){throw Error();}
     var prop;
-    for (prop in a){
+    for (prop in obj1){
         //console.log('checking '+prop)
-        if (!a.hasOwnProperty(prop)){continue;}
+        if (!obj1.hasOwnProperty(prop)){continue;}
         //console.log('  own prop')
-        if (b[prop] == undefined){return false;}
-        //console.log('  b also has')
-        if (typeof a[prop] === 'object'){
+        if (obj2[prop] === undefined){return false;}
+        //console.log('  obj2 also has')
+        if (typeof obj1[prop] === 'object'){
             //console.log('  is object...')
-            if (!dataEquivalent(a[prop], b[prop])){
+            if (!dataEquivalent(obj1[prop], obj2[prop])){
                 return false;
             }
-        } else if (typeof a[prop] === 'function'){
+        } else if (typeof obj1[prop] === 'function'){
             //console.log('  is function...')
-            if (a[prop].toString() != b[prop].toString()){
+            if (obj1[prop].toString() != obj2[prop].toString()){
                 return false;
             }
         } else {
-            if (a[prop] != b[prop]){return false;}
+            if (obj1[prop] != obj2[prop]){
+				//console.log('no way to compare: '+obj1+' prop '+prop);
+				//console.log('values: '+obj1.prop+' | '+obj2.prop);
+				//console.log('and found these to be unequal')
+				return false;
+			}
         }
     }
+	if (pass === 'first'){
+		if (!dataEquivalent(obj2, obj1, 'second')){return false;}
+		pass === 'second';
+		}
     return true;
 };
 
-var testDataEquivalent = function(){
-    var x = {a:1, b:[2,3,4], c:{d:5, e:{f:6}}};
-    var y = {a:1, b:[2,3,4], c:{d:5, e:{f:6}}};
-    var bads = [
-        {a:2, b:[2,3,4], c:{d:5, e:{f:6}}},
-        {b:[2,3,4], c:{d:5, e:{f:6}}},
-        {a:1, b:[3,4], c:{d:5, e:{f:6}}},
-        {a:1, b:[2,3,4], c:{e:{f:6}}},
-        {a:1, b:[2,3,4], c:{d:'dsf', e:{f:6}}},
-        {},
-    ];
-    console.log(dataEquivalent(x, y));
-    for (var i = 0; i < bads.length; i++){
-        console.log(dataEquivalent(x, bads[i]));
-    }
-};
 var choose = function(list, n){
     if (n === undefined){n = 1;}
     result = [];
