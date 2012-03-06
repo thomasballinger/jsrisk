@@ -91,7 +91,7 @@ describe('risk', function(){
             done();
         });
         it('should run without error', function(done){
-            game.takeUnsecureActions([
+            game.takeUnsecureActions('tom', [
                 ['reinforce', 'tom', 'usa', 1],
                 ['reinforce', 'tom', 'mexico', 1],
                 ]);
@@ -99,14 +99,14 @@ describe('risk', function(){
             game.takeAction(['attack', 'tom', 'usa', 'canada']);
             game.takeAction(['done', 'tom']);
             game.allowSecureMoves = false;
-            game.takeUnsecureActions([['done', 'tom']]);
+            game.takeUnsecureActions('tom', [['done', 'tom']]);
             game.allowSecureMoves = true;
             game.takeAction(['done', 'tom']);
             assert.equal(game.whoseTurn, 'ryan');
             done();
         });
         it('should return false for bad moves', function(done){
-            var r = game.takeUnsecureActions([
+            var r = game.takeUnsecureActions('tom',[
                 ['reinforce', 'tom', 'usa', 1],
                 ['reinforce', 'tom', 'mexico', 2],
                 ]);
@@ -138,11 +138,11 @@ describe('risk', function(){
         it('should find two games with same moves made identical', function(done){
             var game1 = getGame();
             var game2 = getGame();
-            game1.takeUnsecureActions([
+            game1.takeUnsecureActions('tomb',[
                 ['reinforce', 'tom', 'usa', 1],
                 ['reinforce', 'tom', 'mexico', 1],
                 ]);
-            game2.takeUnsecureActions([
+            game2.takeUnsecureActions('tomb',[
                 ['reinforce', 'tom', 'usa', 1],
                 ['reinforce', 'tom', 'mexico', 1],
                 ]);

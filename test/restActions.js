@@ -98,24 +98,34 @@ describe('privateRestActions', function(){
 		});
 	});
 });
+
 /*
 describe('publicRestActions', function() {
-	describe('getGameAndMakeMove()', function(){
-		beforeEach(function(done){
-			database.collection('games', function(err, collection){
-				clearDatabase(collection, function(){
-					insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
-						insertGame(createGame('game2', ['tom', 'israel']), collection, function(){
-							insertGame(createGame('game3', ['greg', 'andrew']), collection, done);
-						});
+	var setupStuff = 'can happen here';
+	beforeEach(function(done){
+		console.log('clearing database so as to put three games in it for one test');
+		database.collection('games', function(err, collection){
+			clearDatabase(collection, function(){
+				insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
+					insertGame(createGame('game2', ['tom', 'israel']), collection, function(){
+						insertGame(createGame('game3', ['greg', 'andrew']), collection, done);
 					});
 				});
 			});
 		});
+	});
+	after(function(done){
+		console.log('clearing database since done with publicRestActions');
+		database.collection('games', function(err, collection){
+			console.log('?');
+			clearDatabase(collection, function(){console.log('!'); done();});
+		});
+	});
+	describe('#getGameAndMakeMove()', function(){
 		it('should fail if move is crap', function(done){
 			restActions.getGameAndMakeMove('tom', 'game1', ['reinforce', 'mexico', 4], 
-				function(){ assert.ok(true); done(); },
-				function(result){ assert.ok(false); done(); }
+				function(){assert.ok(true); done();},
+				function(result){ assert.ok(false); done();}
 			)
 		});
 	});

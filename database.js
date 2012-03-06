@@ -6,7 +6,7 @@ var mongo = require('mongodb');
 var host = 'localhost';
 var port = mongo.Connection.DEFAULT_PORT;
 
-// code used from Ralph Edge
+// code based on post by Ralph Edge:
 // http://groups.google.com/group/node-mongodb-native/browse_thread/
 // thread/1b992ee55b7a007d/ca2b08e43d563a44?lnk=gst&q=mocha#ca2b08e43d563a44
 
@@ -15,7 +15,7 @@ var status = "connecting";
 var connection = undefined;
 var db = undefined;
 
-var show_retry_message = false;
+var show_retry_message = true;
 
 db = new mongo.Db('risk', new mongo.Server(host, port, {auto_reconnect : true}));
 status = 'connecting';
@@ -38,7 +38,7 @@ exports.collection = function(collectionName, callback, retry){
 					console.log('Retrying mongo query(', retry, ')');
 				}
                 exports.collection(collectionName, callback, retry + 1);
-            }, 5);
+            }, 50);
         } else {
             console.error('Timeout connecting to mongo(5 retries)');
             process.exit();

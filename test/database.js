@@ -1,7 +1,4 @@
 var assert = require('chai').assert;
-var chai = require('chai');
-//chai.Assertion.includeStack = true;
-
 
 var database = require('../database');
 var util = require('../util');

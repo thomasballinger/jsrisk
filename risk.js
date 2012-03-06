@@ -498,11 +498,13 @@ Game.prototype = {
         }
         return true;
     },
-    takeUnsecureActions : function(argArrayList){
+    takeUnsecureActions : function(player, argArrayList){
         var num_actions = argArrayList.length;
         this.allowSecureMoves = false;
         for (var i = 0; i<num_actions; i++){
             var argArray = argArrayList[i];
+			var actionPlayer = argArray[1];
+			if (actionPlayer != player){return false;}
             var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
             if (!result){return false;}
         }

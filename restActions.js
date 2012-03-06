@@ -64,11 +64,12 @@ exports.updateGame = function(player, client_game_json, callback){
 		var server_game = Game(server_game_json);
 		assert.equal(server_game.allowSecureMoves, false);
 		var moves = client_game.actionHistory;
-        var result = server_game.takeUnsecureActions;
+        var result = server_game.takeUnsecureActions(player, moves);
         if (result){
             database.updateGame(game, function(){throw Error;}, function(){callback(game);})
-        }
-		callback(false);
+        } else {
+			callback(false);
+		}
 	});
 };
 
