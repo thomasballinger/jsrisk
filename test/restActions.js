@@ -23,9 +23,11 @@ var createGame = function(name, players){
 
     // TODO this should be in a Game method
     // getting ready for first move
+	g.whoseTurn = g.players[0];
+	g.turnPhase = 'reinforce';
     g.giveReinforcements();
+
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
-	g.whoseTurn = g.players[0]
 	return g;
 };
 
@@ -36,52 +38,85 @@ var clearDatabase = function(collection, callback){
 var insertGame = function(g, collection, callback){
     collection.insert(g, function(){callback();});
 };
-/*
-describe('restActions', function() {
-	var setupStuff = 'can happen here';
-	beforeEach(function(done){
-        database.collection('games', function(err, collection){
-            clearDatabase(collection, function(){
-                insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
-                    insertGame(createGame('game2', ['tom', 'israel']), collection, function(){
-                        insertGame(createGame('game3', ['greg', 'andrew']), collection, done);
-                    });
-                });
-            });
-		});
-	});
-	describe('#makeMove()', function(){
+
+describe('privateRestActions', function(){
+	describe('_makeMove()', function(){
 		it('should fail if move is crap', function(done){
-			restActions.makeMove('tom', 'game1', ['makeUpAction', 1, 2], function(result){
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['madeUpAction', 1, 2], function(result){
 				assert.equal(false, result);
                 done();
 			});
 		});
 	});
-	describe('#makeMove()', function(){
+	describe('_makeMove()', function(){
+		it('should fail if wrong number of args provided', function(done){
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['fortify', 'mexico', 1], function(result){
+				assert.equal(false, result);
+                done();
+			});
+		});
+	});
+	describe('_makeMove()', function(){
+		it('should fail if countries do not exist', function(done){
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['reinforce', 'atlantis', 1], function(result){
+				assert.equal(false, result);
+                done();
+			});
+		});
+	});
+	describe('_makeMove()', function(){
 		it('should succeed in placing 1 reinforcement', function(done){
-			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 1], function(result){
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['reinforce', 'mexico', 1], function(result){
 				assert.equal(result.getCountry('mexico').numTroops, 7);
                 done();
 			});
 		});
 	});
-	describe('#makeMove()', function(){
-		it('should fail in placing 4 reinforcement', function(done){
-			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 4], function(result){
+	describe('_makeMove()', function(){
+		it('should fail in placing 4 reinforcements', function(done){
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['fortify', 'mexico', 4], function(result){
 				assert.equal(false, result);
                 done();
 			});
 		});
 	});
-	describe('#makeMove()', function(){
+	describe('_makeMove()', function(){
 		it('should succeed in placing 2 reinforcements, then attacking', function(done){
-			restActions.makeMove('tom', 'game1', ['fortify', 'mexico', 2], function(result){
-				restActions.makeMove('tom', 'game1', ['attack', 'usa', 'canada', 3], function(result){
-					assert.notEqual(result.lastAttack, null);
+			var g = createGame('game', ['tom', 'ryan']);
+			restActions._makeMove('tom', g, ['reinforce', 'mexico', 2], function(result){
+				assert.notEqual(result, undefined);
+				restActions._makeMove('tom', result, ['attack', 'usa', 'canada', 3], function(result2){
+					assert.notEqual(result2.lastAttack, null);
 					done();
 				});
 			});
+		});
+	});
+});
+/*
+describe('publicRestActions', function() {
+	describe('getGameAndMakeMove()', function(){
+		beforeEach(function(done){
+			database.collection('games', function(err, collection){
+				clearDatabase(collection, function(){
+					insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
+						insertGame(createGame('game2', ['tom', 'israel']), collection, function(){
+							insertGame(createGame('game3', ['greg', 'andrew']), collection, done);
+						});
+					});
+				});
+			});
+		});
+		it('should fail if move is crap', function(done){
+			restActions.getGameAndMakeMove('tom', 'game1', ['reinforce', 'mexico', 4], 
+				function(){ assert.ok(true); done(); },
+				function(result){ assert.ok(false); done(); }
+			)
 		});
 	});
 });

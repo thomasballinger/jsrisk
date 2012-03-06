@@ -204,15 +204,17 @@ Game.prototype = {
             action : function(player, country, howMany){
                 var country = this.getCountry(country);
 
+                if (player === undefined){return false;}
+                if (country === undefined){return false;}
+                if (howMany === undefined){return false;}
+
                 if (this.reinforcementsToPlace < howMany){return false;}
                 if (this.turnPhase != 'reinforce'){return false;}
                 if (this.whoseTurn != player){return false;}
 
                 if (!country.isOwnedBy(player)){return false;}
-                if (player === undefined){return false;}
-                if (country === undefined){return false;}
-                if (howMany === undefined){return false;}
                 if (typeof howMany == 'string'){howMany = parseInt(howMany);}
+
                 country.numTroops = country.numTroops + howMany;
 
                 this.reinforcementsToPlace = this.reinforcementsToPlace - howMany;
@@ -307,12 +309,12 @@ Game.prototype = {
             action : function(player, from, to, howMany){
                 from = this.getCountry(from);
                 to = this.getCountry(to);
-                if (!from.isOwnedBy(player)){return false;}
-                if (to.isOwnedBy(player)){return false;}
                 if (player === undefined){return false;}
                 if (from === undefined){return false;}
                 if (to === undefined){return false;}
                 if (howMany === undefined){return false;}
+                if (!from.isOwnedBy(player)){return false;}
+                if (to.isOwnedBy(player)){return false;}
                 if (typeof howMany === 'string'){howMany = parseInt(howMany);}
                 var attacking = howMany;
                 var defending = Math.min(to.numTroops, 2);
@@ -450,10 +452,7 @@ Game.prototype = {
                 return this.countries[c];
             }
         }
-        throw {
-            'name':'country not found!',
-            'msg':'this.getCountry function can\'t find country in ' + this.countries + ' matching string '+country
-        };
+        return undefined;
     },
 
     suggestAction : function(argArray){
@@ -477,10 +476,17 @@ Game.prototype = {
         }
     },
     takeAction : function(argArray){
-        if (argArray.length < 1){return false;}
-        var secure = (this.actions[argArray[0]].isSecure)
+        if (argArray.length < 1){
+            return false;
+        }
+		if (this.actions[argArray[0]].action === undefined){
+            return false;
+		}
+        var secure = this.actions[argArray[0]].isSecure;
         if (secure){
-            if (!this.allowSecureMoves){return false;}
+            if (!this.allowSecureMoves){
+                return false;
+            }
         }
         var result = this.actions[argArray[0]].action.apply(this, argArray.slice(1));
         if (!result){return false;}
