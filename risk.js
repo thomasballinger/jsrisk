@@ -85,6 +85,15 @@ Game.areIdentical = function(game1, game2){
 };
 // The games are equivalent in 
 Game.prototype = {
+    toJson : function(){
+        var j = {};
+        for (var prop in this){
+            if (this.hasOwnProperty(prop)){
+                j[prop] = this[prop];
+            }
+        }
+        return j;
+    },
     endTurn : function(){
         this.whoseTurn = this.players[(this.players.indexOf(this.whoseTurn) + 1) % this.players.length];
         this.fortifyMovesToMake = this.fortifyMovesAllowed;

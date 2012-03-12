@@ -5,11 +5,11 @@ var assert = require('assert')
 
 
 // useful database methods:
-//database.getAllGameNames(callback);
-//database.getGameByName(name, callback);
-//database.updateGame(game, doesNotExistCallback, callback);
-//database.removeGameByName(game, doesNotExistCallback, callback);
-//database.getAllGamesWithPlayer(player, callback)
+//database.getAllGameJsonNames(callback);
+//database.getGameJsonByName(name, callback);
+//database.updateGameJson(game, doesNotExistCallback, callback);
+//database.removeGameJsonByName(game, doesNotExistCallback, callback);
+//database.getAllGameJsonsWithPlayer(player, callback)
 
 // These are used for taking user-authorized actions
 // They all require associated user and auth
@@ -37,36 +37,37 @@ exports._makeMove = function(player, game, argArray, callback){
         var result = game.takeAction(argArray);
         if (result == false){callback(false); return;}
         game.allowSecureMoves = false
-        game.lastSecureJsonString = null
         game.lastSecureJsonString = JSON.stringify(game)
         callback(game);
     }
 };
 
 exports.getGameAndMakeMove = function(player, gameName, argArray, error, callback){
-	database.getGameByName(gameName, function(game_json){
+	database.getGameJsonByName(gameName, function(game_json){
 		var game = new risk.Game(game_json);
         exports._makeMove(player, game, argArray, function(result_game){
             if (!result_game){
                 error();
-            }
-            database.updateGame(result_game, function(){throw new Error();}, function(){
-                callback(game);
-            });
+				return;
+            } else {
+				database.updateGameJson(result_game.toJson(), function(){throw new Error();}, function(){
+					callback(game);
+				});
+			}
         });
 	});
 };
 
 // Authenticated player wants to submit a series of moves
 exports.updateGame = function(player, client_game_json, callback){
-	database.getGameByName(game.name, function(server_game_json){
+	database.getGameJsonByName(game.name, function(server_game_json){
 		var client_game = Game(client_game_json);
 		var server_game = Game(server_game_json);
 		assert.equal(server_game.allowSecureMoves, false);
 		var moves = client_game.actionHistory;
         var result = server_game.takeUnsecureActions(player, moves);
         if (result){
-            database.updateGame(game, function(){throw Error;}, function(){callback(game);})
+            database.updateGameJson(game.toJson(), function(){throw Error;}, function(){callback(game);})
         } else {
 			callback(false);
 		}
@@ -92,6 +93,24 @@ exports.undoLastMove = function(player, gameName, callback){
 };
 
 exports.createGame = function(player, gameName, playerList, callback){
+    var g = new risk.Game({name:gameName});
+    g.players = playersList
+    g.addNewCountry('canada', ['usa']);
+    g.addNewCountry('usa', ['canada', 'mexico']);
+    g.addNewCountry('mexico', ['usa']);
+
+    // board setup
+    g.setCountryState('usa', g.players[0], 8);
+    g.setCountryState('canada', g.players[1], 4);
+    g.setCountryState('mexico', g.players[0], 6);
+
+    g.whoseTurn = g.players[0]; 
+    g.turnPhase = 'reinforce'; 
+    g.giveReinforcements(); 
+    g.fortifyMovesToMake = g.fortifyMovesAllowed; 
+
+    exports.updateGame()
+
 	callback(false);
 };
 
@@ -111,6 +130,7 @@ var createNewBasicGame = function(){
     // getting ready for first move
     g.giveReinforcements();
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
+    g.whoseTurn
 
     return g;
 };

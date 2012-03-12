@@ -28,8 +28,8 @@ var clearDatabase = function(collection, callback){
     collection.remove({}, callback);
 };
 
-var insertGame = function(g, collection, callback){
-    collection.insert(g, function(){callback();});
+var insertGameJson = function(g, collection, callback){
+    collection.insert(JSON.parse(JSON.stringify(g)), function(){callback();});
 };
 
 describe('database', function() {
@@ -37,9 +37,9 @@ describe('database', function() {
 	beforeEach(function(done){
         database.collection('games', function(err, collection){
             clearDatabase(collection, function(){
-                insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
-                    insertGame(createGame('game2', ['tom', 'israel']), collection, function(){
-                        insertGame(createGame('game3', ['greg', 'andrew']), collection, done);
+                insertGameJson(createGame('game1', ['tom', 'ryan']), collection, function(){
+                    insertGameJson(createGame('game2', ['tom', 'israel']), collection, function(){
+                        insertGameJson(createGame('game3', ['greg', 'andrew']), collection, done);
                     });
                 });
             });
@@ -47,33 +47,33 @@ describe('database', function() {
 	});
 	describe('#getAllGameNames()', function(){
 		it('should return all game names', function(done){
-			database.getAllGameNames(function(list){
+			database.getAllGameJsonNames(function(list){
 				assert.equal(list.length, 3);
 				assert.equal(typeof list[0], 'string');
                 done();
 			});
 		});
 	});
-	describe('#getGameByName()', function(){
+	describe('#getGameJsonByName()', function(){
 		it('should returns the correct game', function(done){
-			database.getGameByName('game1', function(game){
+			database.getGameJsonByName('game1', function(game){
 				assert.equal(game.name, 'game1');
 				assert.equal(game.players[0], 'tom');
 				done();
 			});
 		});
 	});
-    describe('#storeGame()', function(){
+    describe('#storeGameJson()', function(){
         it('should store a game such that it is retrievable', function(done){
             var g = createGame('test', ['tom', 'ryan']);
             g.arbitraryAtt = 'asdf';
-            database.storeGame(g, 
+            database.storeGameJson(g.toJson(), 
 				function(){
 					throw Error('Name already in database');
 					done();
 				}, 
 				function(){
-					database.getGameByName('test', function(game){
+					database.getGameJsonByName('test', function(game){
 						assert.equal(game && game.arbitraryAtt, 'asdf');
 						done();
 					});
@@ -83,7 +83,7 @@ describe('database', function() {
         it('should fail to store a game with a repeat name', function(done){
             var g = createGame('game1', ['tom', 'ryan']);
             g.arbitraryAtt = 'asdf';
-			database.storeGame(g, 
+			database.storeGameJson(g.toJson(), 
 				function(){
 					assert.ok('correct callback called')
 					done();
@@ -96,15 +96,15 @@ describe('database', function() {
 			);
 		});
 	});
-    describe('#removeGameByName()', function(){
+    describe('#removeGameJsonByName()', function(){
         it('should remove a game from database', function(done){
-            database.removeGameByName('game1',
+            database.removeGameJsonByName('game1',
 				function(){
 					throw Error('Game with Name does not exist');
 					done();
 				},
 				function(){
-					database.getAllGameNames(function(list){
+					database.getAllGameJsonNames(function(list){
 						assert.equal(list.length, 2);
 						done();
 					});
@@ -112,13 +112,13 @@ describe('database', function() {
 			);
         });
         it('should fail if game name does not exist', function(done){
-            database.removeGameByName('test',
+            database.removeGameJsonByName('test',
 				function(){
 					assert.ok('correct callback called');
 					done();
 				},
 				function(){
-					database.getAllGameNames(function(list){
+					database.getAllGameJsonNames(function(list){
 						throw Error('Wrong code path taken');
 						done();
 					});
@@ -126,17 +126,17 @@ describe('database', function() {
 			);
         });
     });
-    describe('#updateGame()', function(){
+    describe('#updateGameJson()', function(){
         it('should update a game with arbitrary atts', function(done){
             var g = createGame('game1', ['tom', 'ryan']);
             g.arbitraryAtt = 'asdf';
-            database.updateGame(g, 
+            database.updateGameJson(g.toJson(), 
 				function(){
 					throw Error('Item to update does not exist');
 					done();
 				},
 				function(obj){
-					database.getGameByName('game1', function(game){
+					database.getGameJsonByName('game1', function(game){
 						assert.equal(game && game.arbitraryAtt, 'asdf');
 						done();
 					});
@@ -145,7 +145,7 @@ describe('database', function() {
         });
         it('should throw an error if name does not exist', function(done){
             var g = createGame('test', ['tom', 'ryan']);
-            database.updateGame(g, 
+            database.updateGameJson(g.toJson(), 
 				function(){
 					assert.ok('Item to update does not exist')
 					done();
@@ -157,20 +157,12 @@ describe('database', function() {
 			);
         });
     });
-	describe('#getAllGamesWithPlayer', function(){
+	describe('#getAllGameJsonsWithPlayer', function(){
 		it('should find all games a player is in', function(done){
-			database.getAllGamesWithPlayer('tom', function(games){
+			database.getAllGameJsonsWithPlayer('tom', function(games){
 				assert.equal(games.length, 2);
 				done();
 			});
 		});
 	});
 });
-				
-	//database.insertGame(db, createGame('test1', ['tom', 'ryan']));
-
-	// real tests
-	//database.getAllGameNames(db, function(x){console.dir(x);})
-	//database.getGameByName(db, function(x){console.dir(x);})
-	//setTimeout(function(){db.close();}, 1000);
-

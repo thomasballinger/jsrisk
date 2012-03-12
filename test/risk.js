@@ -150,6 +150,31 @@ describe('risk', function(){
             done();
         });
     });
+    describe('#reconstitution', function(){
+        beforeEach(function(done){
+            game = getGame();
+            done();
+        });
+        it('should normally have prototype functions', function(done){
+            assert.notEqual(game.actions['done'].action, undefined);
+            done();
+        });
+        it('creating game manually should work the same', function(done){
+			var g = new risk.Game({name:'stuff'});
+            assert.notEqual(g.actions['done'].action, undefined);
+            done();
+        });
+        it('constructor should take an object, and still have prototype functions', function(done){
+			var g = new risk.Game({name:'stuff'});
+            assert.notEqual(g.actions['done'].action, undefined);
+            done();
+        });
+        it('should be still have prototype functions', function(done){
+			var g = new risk.Game(JSON.stringify(game));
+            assert.notEqual(g.actions['done'].action, undefined);
+            done();
+        });
+    });
     describe('#actions suggestions', function(){
         it('should run these commands without error', function(done){
             assert.doesNotThrow(function(){

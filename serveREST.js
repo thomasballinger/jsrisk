@@ -25,7 +25,7 @@ app.get('/login', function(){})
 // the post one should be disabled later
 app.get('/gamestorage/game/:name', function(req, res, next){
     console.log('received request for game '+req.params.name);
-    database.getGameByName(req.params.name, function(game){res.send(game);});
+    database.getGameJsonByName(req.params.name, function(game){res.send(game);});
 });
 app.post('/gamestorage/game/:name', function(req, res){
     storeGameByName(req.params.name, req.body)

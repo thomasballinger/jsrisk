@@ -1,6 +1,7 @@
 
 var assert = require('chai').assert;
 var chai = require('chai');
+chai.Assertion.includeStack = true; // defaults to false
 
 
 var database = require('../database');
@@ -36,7 +37,7 @@ var clearDatabase = function(collection, callback){
 };
 
 var insertGame = function(g, collection, callback){
-    collection.insert(g, function(){callback();});
+    collection.insert(g.toJson(), function(){callback();});
 };
 
 describe('privateRestActions', function(){
@@ -99,11 +100,9 @@ describe('privateRestActions', function(){
 	});
 });
 
-/*
 describe('publicRestActions', function() {
 	var setupStuff = 'can happen here';
 	beforeEach(function(done){
-		console.log('clearing database so as to put three games in it for one test');
 		database.collection('games', function(err, collection){
 			clearDatabase(collection, function(){
 				insertGame(createGame('game1', ['tom', 'ryan']), collection, function(){
@@ -115,19 +114,32 @@ describe('publicRestActions', function() {
 		});
 	});
 	after(function(done){
-		console.log('clearing database since done with publicRestActions');
 		database.collection('games', function(err, collection){
-			console.log('?');
-			clearDatabase(collection, function(){console.log('!'); done();});
+			clearDatabase(collection, done);
 		});
 	});
 	describe('#getGameAndMakeMove()', function(){
 		it('should fail if move is crap', function(done){
 			restActions.getGameAndMakeMove('tom', 'game1', ['reinforce', 'mexico', 4], 
 				function(){assert.ok(true); done();},
-				function(result){ assert.ok(false); done();}
+				function(result){assert.ok(false); done();}
+			)
+		});
+	});
+	describe('#getGameAndMakeMove()', function(){
+		it('should fail if wrong number of args provided', function(done){
+			restActions.getGameAndMakeMove('tom', 'game1', ['fortify', 'mexico', 1], 
+				function(){assert.ok(true); done();},
+				function(result){assert.ok(false); done();}
+			)
+		});
+	});
+	describe('#getGameAndMakeMove()', function(){
+		it('should succeed in placing 1 reinforcement', function(done){
+			restActions.getGameAndMakeMove('tom', 'game1', ['reinforce', 'mexico', 1], 
+				function(){assert.ok(false); done();},
+				function(result){assert.ok(true); done();}
 			)
 		});
 	});
 });
-*/

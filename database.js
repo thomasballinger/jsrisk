@@ -48,7 +48,7 @@ exports.collection = function(collectionName, callback, retry){
     }
 };
 
-exports.getAllGameNames = function(callback){
+exports.getAllGameJsonNames = function(callback){
     exports.collection('games', function(err, collection){
         collection.find({}).toArray(function(err, results){
             var names = [];
@@ -61,7 +61,7 @@ exports.getAllGameNames = function(callback){
     });
 };
 
-exports.getGameByName = function(name, callback){
+exports.getGameJsonByName = function(name, callback){
     exports.collection('games', function(err, collection){
         collection.find({'name':name}).toArray(function(err, results){
 			callback(results[0]);
@@ -69,9 +69,9 @@ exports.getGameByName = function(name, callback){
     });
 };
 
-exports.storeGame = function(game, alreadyExistsFailure, callback){
+exports.storeGameJson = function(game, alreadyExistsFailure, callback){
     exports.collection('games', function(err, collection){
-        exports.getGameByName(game.name, function(savedGame){
+        exports.getGameJsonByName(game.name, function(savedGame){
             if (savedGame !== undefined){
                 alreadyExistsFailure();
             } else {
@@ -81,7 +81,7 @@ exports.storeGame = function(game, alreadyExistsFailure, callback){
     });
 };
 
-exports.updateGame = function(game, doesNotExistFailure, callback){
+exports.updateGameJson = function(game, doesNotExistFailure, callback){
     exports.collection('games', function(err, collection){
         collection.update({'name':game.name}, game, {safe:true}, function(err){
             if (err) {doesNotExistFailure();}
@@ -90,9 +90,9 @@ exports.updateGame = function(game, doesNotExistFailure, callback){
     });
 };
 
-exports.removeGameByName = function(name, doesNotExistFailure, callback){
+exports.removeGameJsonByName = function(name, doesNotExistFailure, callback){
     exports.collection('games', function(err, collection){
-        exports.getGameByName(name, function(savedGame){
+        exports.getGameJsonByName(name, function(savedGame){
             if (savedGame === undefined){
                 doesNotExistFailure();
             } else {
@@ -102,7 +102,7 @@ exports.removeGameByName = function(name, doesNotExistFailure, callback){
     });
 };
 
-exports.getAllGamesWithPlayer = function(player, callback){
+exports.getAllGameJsonsWithPlayer = function(player, callback){
     exports.collection('games', function(err, collection){
         collection.find({}).toArray(function(err, results){
             var games = [];
@@ -121,7 +121,6 @@ exports.getAllGamesWithPlayer = function(player, callback){
         });
     });
 };
-
 
 if (!module.parent) {
 	exports.collection('games', function(err, collection){
