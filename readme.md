@@ -3,26 +3,22 @@ jsrisk
 
 Todo:
 
-* Nice tests for all simple database methods: DONE
-* Switch to node-restify instead of express for this project
-* Implementation of all simple database methods
-* Nice tests for all restActions
-* Implementation of all restActions
 * Set up authentication for node server and REST requests
-  * super simple would be ok 
-* implement rest of REST queries
+* Implementation of all final few restActions
+* Tests for all REST queries
+* Implement all of REST queries
+* Write some major front-end code!
+* Graphical display of map in browser
+* Graphical interaction with map in browser
 * Learn how to hook up node.js, mongrel2 and brubeck
 * Learn some brubeck, do views there
 
 Maybe Todo:
 
-* Write thorough tests for risk.js DONE
 * Write a command line interface for playing to test game
   (requires text display function, wrappers for input suggestion)
 * Command line implementing secure moves such as attacking separately
   (requiring jsonification, reconstitution, etc)
-* Graphical display of map in browser
-* Graphical interaction with map in browser
 
 Overall Plan:
 Use mongrel2 to route logic requests to node, page requests to brubeck.
