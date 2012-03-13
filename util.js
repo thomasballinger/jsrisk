@@ -1,4 +1,11 @@
+risk = require('./risk');
+var clearDatabase = function(collection, callback){
+    collection.remove({}, callback);
+};
 
+var insertGame = function(g, collection, callback){
+    collection.insert(g.toJson(), function(){callback();});
+};
 var dataEquivalent = function(obj1, obj2, pass){
 	if (pass === undefined){pass = 'first';}
 	if (pass !== 'first' && pass !== 'second'){throw Error();}
@@ -35,6 +42,28 @@ var dataEquivalent = function(obj1, obj2, pass){
     return true;
 };
 
+var createGame = function(name, players){
+    var g = new risk.Game({'name':name});
+	g.players = players;
+
+    g.addNewCountry('canada', ['usa']);
+    g.addNewCountry('usa', ['canada', 'mexico']);
+    g.addNewCountry('mexico', ['usa']);
+
+    // board setup
+    g.setCountryState('usa', g.players[0], 8);
+    g.setCountryState('canada', g.players[1], 4);
+    g.setCountryState('mexico', g.players[0], 6);
+
+    // TODO this should be in a Game method
+    // getting ready for first move
+	g.whoseTurn = g.players[0];
+	g.turnPhase = 'reinforce';
+    g.giveReinforcements();
+
+    g.fortifyMovesToMake = g.fortifyMovesAllowed;
+	return g;
+};
 var choose = function(list, n){
     if (n === undefined){n = 1;}
     result = [];
@@ -88,4 +117,7 @@ if (exports) {
 	exports.dataEquivalent = dataEquivalent;
 	exports.createRandomPronounceableWord = createRandomPronounceableWord;
 	exports.choose = choose;
+	exports.createGame = createGame;
+	exports.clearDatabase = clearDatabase;
+	exports.insertGame = insertGame;
 }

@@ -3,8 +3,7 @@ var express = require('express');
 var risk = require('./risk');
 var util = require('./util');
 var database = require('./database')
-
-database.connect()
+var restActions = require('./restActions')
 
 var app = express.createServer();
 
@@ -15,7 +14,7 @@ app.configure(function(){
     app.use(express.bodyParser());
 });
 app.get('/', function(req, res, next){
-    database.getAllGameNames(function(names){res.send(names);});
+    database.getAllGameJsonNames(function(names){res.send(names);});
 });
 
 // todo
@@ -104,26 +103,10 @@ app.get('/404', function(req, res) {
     res.send('NOT FOUND '+req.url);
 });
 
-var createNewBasicGame = function(){
-    g = new risk.Game({name:util.createRandomPronounceableWord()});
-    g.players = util.choose(['ryan', 'tom', 'andrew', 'israel'], 2);
-    g.addNewCountry('canada', ['usa']);
-    g.addNewCountry('usa', ['canada', 'mexico']);
-    g.addNewCountry('mexico', ['usa']);
-
-    // board setup
-    g.setCountryState('usa', g.players[0], 8);
-    g.setCountryState('canada', g.players[1], 4);
-    g.setCountryState('mexico', g.players[0], 6);
-
-    // TODO this should be in a Game method
-    // getting ready for first move
-    g.giveReinforcements();
-    g.fortifyMovesToMake = g.fortifyMovesAllowed;
-
-    return g;
-};
-
-var port = 8124
-app.listen(port);
-console.log('listening at '+port)
+if (!module.parent) {
+    var port = 8124
+    app.listen(port);
+    console.log('listening at '+port)
+} else {
+    exports.app = app;
+}

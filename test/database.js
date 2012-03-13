@@ -3,26 +3,7 @@ var assert = require('chai').assert;
 var database = require('../database');
 var util = require('../util');
 var risk = require('../risk');
-
-var createGame = function(name, players){
-    var g = new risk.Game({'name':name});
-	g.players = players;
-
-    g.addNewCountry('canada', ['usa']);
-    g.addNewCountry('usa', ['canada', 'mexico']);
-    g.addNewCountry('mexico', ['usa']);
-
-    // board setup
-    g.setCountryState('usa', g.players[0], 8);
-    g.setCountryState('canada', g.players[1], 4);
-    g.setCountryState('mexico', g.players[0], 6);
-
-    // TODO this should be in a Game method
-    // getting ready for first move
-    g.giveReinforcements();
-    g.fortifyMovesToMake = g.fortifyMovesAllowed;
-	return g;
-};
+var createGame = util.createGame
 
 var clearDatabase = function(collection, callback){
     collection.remove({}, callback);
