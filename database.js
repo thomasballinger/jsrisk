@@ -69,13 +69,13 @@ exports.getGameJsonByName = function(name, callback){
     });
 };
 
-exports.storeGameJson = function(game, alreadyExistsFailure, callback){
+exports.storeGameJson = function(game_json, alreadyExistsFailure, callback){
     exports.collection('games', function(err, collection){
-        exports.getGameJsonByName(game.name, function(savedGame){
+        exports.getGameJsonByName(game_json.name, function(savedGame){
             if (savedGame !== undefined){
                 alreadyExistsFailure();
             } else {
-                collection.insert(game, callback);
+                collection.insert(game_json, callback);
             }
         });
     });

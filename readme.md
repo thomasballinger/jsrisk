@@ -3,11 +3,11 @@ jsrisk
 
 Todo:
 
-* Set up authentication for node server and REST requests
-* Implementation of all final few restActions
-* Tests for all REST queries
-* Implement all of REST queries
-* Write some major front-end code!
+* Implement new game REST
+* Implement undo move REST
+* Prepare for js frontend:
+    * static assets
+    * link to map in risk object
 * Graphical display of map in browser
 * Graphical interaction with map in browser
 * Learn how to hook up node.js, mongrel2 and brubeck
@@ -15,10 +15,8 @@ Todo:
 
 Maybe Todo:
 
-* Write a command line interface for playing to test game
+* Write a command line interface using node, REST requests
   (requires text display function, wrappers for input suggestion)
-* Command line implementing secure moves such as attacking separately
-  (requiring jsonification, reconstitution, etc)
 
 Overall Plan:
 Use mongrel2 to route logic requests to node, page requests to brubeck.
@@ -26,9 +24,6 @@ node will talk to mongodb for storing gamelogic.
 
 Requests routed to node.js
 ---------------------------
-These are just database wrappers - is this even a good idea?
-Does this abstraction gain us anything at all?  Should other methods
-call these by url, or just call the methods directly?
 
 * `GET /gamestorage/game/northamerica/`
   Responds with game
@@ -81,10 +76,12 @@ These are more interesting, have to implement logic
     * respond with game
 * `GET /gamelogic/game/northamerica/undo`
   Responds with game with all moves but the last made
-* `GET /gamelogic/newgame/name/northamerica/`
+* `POST /gamelogic/newgame`
   Responds with new game
     * store game
     * respond with game
+* `GET /login`
+* `POST /login`
 
 Requests routed to Brubeck:
 

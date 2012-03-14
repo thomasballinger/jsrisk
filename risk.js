@@ -47,8 +47,8 @@ var Game = function(obj){
     this.name = 'unnamed';
     this.countries = [];             // array of country objects
     this.players = [];               // array of player names
-    this.actionHistory = [];         // array of moves from lastSecureJSON
-    this.lastSecureJsonString = null;// stringified object from server
+    this.actionHistory = [];         // array of moves from baseStateJson
+    this.baseStateJson = null;       // object before move history
     this.allowSecureMoves = false;
     this.whoseTurn = null;           // player name
     this.turnPhase = null;           // can be 'reinforce', 'attack',
@@ -74,8 +74,8 @@ var Game = function(obj){
 };
 Game.clientReconstitute = function(s){
     g = new Game(s);
-    if (g.lastSecureJsonString == null){
-        g.lastSecureJsonString = JSON.stringify(g);
+    if (g.baseStateJson == null){
+        g.baseStateJson = g.toJson();
     }
     return g;
 };
@@ -501,7 +501,8 @@ Game.prototype = {
         if (!result){return false;}
         if (secure){
             this.actionHistory=[];
-            this.lastSecureJsonString = JSON.stringify(this)
+            this.baseStateJson = null;
+            this.baseStateJson = this.toJson();
         } else {
             this.actionHistory.push(argArray);
         }

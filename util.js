@@ -11,7 +11,7 @@ var dataEquivalent = function(obj1, obj2, pass){
 	if (pass !== 'first' && pass !== 'second'){throw Error();}
     var prop;
     for (prop in obj1){
-        //console.log('checking '+prop)
+        //console.log('checking '+prop+' of '+obj1)
         if (!obj1.hasOwnProperty(prop)){continue;}
         //console.log('  own prop')
         if (obj2[prop] === undefined){return false;}
@@ -60,8 +60,9 @@ var createGame = function(name, players){
 	g.whoseTurn = g.players[0];
 	g.turnPhase = 'reinforce';
     g.giveReinforcements();
-
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
+    g.baseStateJson = g.toJson();
+
 	return g;
 };
 var choose = function(list, n){
@@ -92,8 +93,8 @@ var createRandomPronounceableWord = function(){
 };
 
 var createRandomBasicGame = function(){
-    g = new risk.Game({name:util.createRandomPronounceableWord()});
-    g.players = util.choose(['ryan', 'tom', 'andrew', 'israel'], 2);
+    g = new risk.Game({name:createRandomPronounceableWord()});
+    g.players = choose(['ryan', 'tom', 'andrew', 'israel'], 2);
     g.addNewCountry('canada', ['usa']);
     g.addNewCountry('usa', ['canada', 'mexico']);
     g.addNewCountry('mexico', ['usa']);
@@ -105,9 +106,12 @@ var createRandomBasicGame = function(){
 
     // TODO this should be in a Game method
     // getting ready for first move
+
+	g.whoseTurn = g.players[0];
+	g.turnPhase = 'reinforce';
     g.giveReinforcements();
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
-
+    g.baseStateJson = g.toJson();
     return g;
 };
 //testDataEquivalent();
@@ -120,4 +124,5 @@ if (exports) {
 	exports.createGame = createGame;
 	exports.clearDatabase = clearDatabase;
 	exports.insertGame = insertGame;
+	exports.createRandomBasicGame = createRandomBasicGame;
 }

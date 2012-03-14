@@ -4,24 +4,13 @@ var database = require('./database')
 var assert = require('assert')
 
 
-// useful database methods:
-//database.getAllGameJsonNames(callback);
-//database.getGameJsonByName(name, callback);
-//database.updateGameJson(game, doesNotExistCallback, callback);
-//database.removeGameJsonByName(game, doesNotExistCallback, callback);
-//database.getAllGameJsonsWithPlayer(player, callback)
-
-// These are used for taking user-authorized actions
-// They all require associated user and auth
-
-// Let us assume authentication has already happened, and we are passed a user
-// in addition to the other url data.
+// Here we assume authentication has already happened, and we are passed a user
+// in addition to the argArray and other data.
 //
-// ActionList does not include player data in this case (usually first list entry)
+// argArray does not include player data in this case (usually first list entry)
 //
 // callbacks passed will take one argument, game or false
 
-// 
 exports._makeMove = function(player, game, argArray, callback){
     game.allowSecureMoves = false;
     if (game.actions[argArray[0]] === undefined){callback(false); return;}
@@ -37,7 +26,6 @@ exports._makeMove = function(player, game, argArray, callback){
         var result = game.takeAction(argArray);
         if (result == false){callback(false); return;}
         game.allowSecureMoves = false
-        game.lastSecureJsonString = JSON.stringify(game)
         callback(game);
     }
 };
@@ -51,7 +39,7 @@ exports.getGameAndMakeMove = function(player, gameName, argArray, error, callbac
 				return;
             } else {
 				database.updateGameJson(result_game.toJson(), function(){throw new Error();}, function(){
-					callback(game);
+					callback(result_game);
 				});
 			}
         });
@@ -60,14 +48,14 @@ exports.getGameAndMakeMove = function(player, gameName, argArray, error, callbac
 
 // Authenticated player wants to submit a series of moves
 exports.updateGame = function(player, client_game_json, callback){
-	database.getGameJsonByName(game.name, function(server_game_json){
-		var client_game = Game(client_game_json);
-		var server_game = Game(server_game_json);
+	database.getGameJsonByName(client_game_json.name, function(server_game_json){
+		var client_game = new risk.Game(client_game_json);
+		var server_game = new risk.Game(server_game_json);
 		assert.equal(server_game.allowSecureMoves, false);
 		var moves = client_game.actionHistory;
         var result = server_game.takeUnsecureActions(player, moves);
         if (result){
-            database.updateGameJson(game.toJson(), function(){throw Error;}, function(){callback(game);})
+            database.updateGameJson(server_game.toJson(), function(){throw Error;}, function(){callback(server_game);})
         } else {
 			callback(false);
 		}
@@ -108,29 +96,9 @@ exports.createGame = function(player, gameName, playerList, callback){
     g.turnPhase = 'reinforce'; 
     g.giveReinforcements(); 
     g.fortifyMovesToMake = g.fortifyMovesAllowed; 
+    g.baseStateJson = g.toJson();
 
     exports.updateGame()
 
 	callback(false);
-};
-
-var createNewBasicGame = function(){
-    g = new risk.Game({name:util.createRandomPronounceableWord()});
-    g.players = util.choose(['ryan', 'tom', 'andrew', 'israel'], 2);
-    g.addNewCountry('canada', ['usa']);
-    g.addNewCountry('usa', ['canada', 'mexico']);
-    g.addNewCountry('mexico', ['usa']);
-
-    // board setup
-    g.setCountryState('usa', g.players[0], 8);
-    g.setCountryState('canada', g.players[1], 4);
-    g.setCountryState('mexico', g.players[0], 6);
-
-    // TODO this should be in a Game method
-    // getting ready for first move
-    g.giveReinforcements();
-    g.fortifyMovesToMake = g.fortifyMovesAllowed;
-    g.whoseTurn
-
-    return g;
 };
