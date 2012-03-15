@@ -8,8 +8,10 @@ Todo:
 * Prepare for js frontend:
     * static assets
     * link to map in risk object
+    * consider a real world map based interface, if anything is snappy enough
 * Graphical display of map in browser
 * Graphical interaction with map in browser
+* Add permenent history to risk object for fun analysis
 * Learn how to hook up node.js, mongrel2 and brubeck
 * Learn some brubeck, do views there
 

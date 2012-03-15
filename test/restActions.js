@@ -27,8 +27,9 @@ var createGame = function(name, players){
 	g.whoseTurn = g.players[0];
 	g.turnPhase = 'reinforce';
     g.giveReinforcements();
-
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
+    g.baseStateJson = g.toJson();
+    console.log(g);
 	return g;
 };
 

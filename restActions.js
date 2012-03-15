@@ -79,26 +79,3 @@ exports.updateGameAndMakeMove = function(player, client_game_json, argArray, err
 exports.undoLastMove = function(player, gameName, callback){
     callback(false);
 };
-
-exports.createGame = function(player, gameName, playerList, callback){
-    var g = new risk.Game({name:gameName});
-    g.players = playersList
-    g.addNewCountry('canada', ['usa']);
-    g.addNewCountry('usa', ['canada', 'mexico']);
-    g.addNewCountry('mexico', ['usa']);
-
-    // board setup
-    g.setCountryState('usa', g.players[0], 8);
-    g.setCountryState('canada', g.players[1], 4);
-    g.setCountryState('mexico', g.players[0], 6);
-
-    g.whoseTurn = g.players[0]; 
-    g.turnPhase = 'reinforce'; 
-    g.giveReinforcements(); 
-    g.fortifyMovesToMake = g.fortifyMovesAllowed; 
-    g.baseStateJson = g.toJson();
-
-    exports.updateGame()
-
-	callback(false);
-};

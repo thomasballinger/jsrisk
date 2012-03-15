@@ -1,6 +1,5 @@
 // cheap interface using the suggest capabilities
 
-
 var createButton = function(label, action, idOfParent){
     var button = document.createElement('input');
     button.setAttribute("type", "button");
@@ -46,6 +45,7 @@ var createButtonsForNextChoice = function(choice){
 
 var argArray = [];
 var startStuff = function(){
+    document.writeln(superagent)
     initializeRisk();
     createButton('display', "t(na.getAscii());", "spanForLongTerm");
     document.getElementById("spanForLongTerm").removeChild(document.getElementById("start"));
