@@ -13,6 +13,7 @@ app.configure(function(){
     app.use(express.bodyParser());
 	app.use(express.cookieParser('secret'));
 	app.use(express.session({secret: "keyboard cat"}));
+    app.use(express.static(__dirname+'/public'));
     app.use(app.router);
 });
 app.get('/', function(req, res, next){
