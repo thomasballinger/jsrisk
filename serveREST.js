@@ -11,7 +11,7 @@ app.configure(function(){
     //app.use(express.errorHandler({
     //    dumpExceptions: true, showStack: true}));
     app.use(express.bodyParser());
-	app.use(express.cookieParser());
+	app.use(express.cookieParser('secret'));
 	app.use(express.session({secret: "keyboard cat"}));
     app.use(app.router);
 });
@@ -88,7 +88,7 @@ app.get('/gamelogic/game/:name', function(req, res, next){
             res.send('game not found', 404);
         } else {
             if (game_json.players.indexOf(user) == -1){
-                res.send('you are not participating in that game', 401)
+                res.send('you are not participating in that game', 401);
             } else {
                 res.send(game_json);
             }
@@ -99,7 +99,7 @@ app.get('/gamelogic/game/:name', function(req, res, next){
 app.post('/gamelogic/game/:game/update', function(req, res, next){
     var user = req.session.user;
     var gamename = req.params.game;
-    var gamejson = req.body
+    var gamejson = req.body;
     if (gamename != gamejson.name){
         consle.log('game name and post data game name do not match');
         res.send('game name and post data game name do not match');
@@ -131,7 +131,7 @@ var takeAction = function(req, res, next, argArray){
             res.send(game.toJson());
         }
     );
-}
+};
 app.get('/gamelogic/game/:game/:arg0/:arg1/:arg2/:arg3', function(req, res, next){
     var argArray = [req.params.arg0, req.params.arg1, req.params.arg2, req.params.arg3];
     takeAction(req, res, next, argArray);
@@ -167,7 +167,7 @@ var updateAndTakeAction = function(req, res, next, argArray){
 			}
 		);
 	}
-}
+};
 app.post('/gamelogic/game/:game/:arg0/:arg1/:arg2/:arg3', function(req, res, next){
     var argArray = [req.params.arg0, req.params.arg1, req.params.arg2, req.params.arg3];
     updateAndTakeAction(req, res, next, argArray);
@@ -187,7 +187,7 @@ app.post('/gamelogic/game/:game/:arg0', function(req, res, next){
 
 // Responds with game from last secure string
 app.get('/gamelogic/game/:game/undo', function(req, res, next){
-    res.send('not implemented!', 503)
+    res.send('not implemented!', 503);
     //console.log('responding with one less move on queue is not implemented!');
 });
 

@@ -29,7 +29,7 @@ var createGame = function(name, players){
     g.giveReinforcements();
     g.fortifyMovesToMake = g.fortifyMovesAllowed;
     g.baseStateJson = g.toJson();
-    console.log(g);
+    //console.log(g);
 	return g;
 };
 

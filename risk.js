@@ -16,6 +16,8 @@ var Country = function(obj){
 Country.prototype = {
     numTroops : 0,
     player : null,
+    x : 0,
+    y : 0,
     isOwnedBy : function(inPlayer){
         return inPlayer === this.player;
     },
@@ -45,6 +47,7 @@ var Game = function(obj){
         obj = JSON.parse(obj);
     }
     this.name = 'unnamed';
+    this.mapImage = 'default.png'    // background image to use
     this.countries = [];             // array of country objects
     this.players = [];               // array of player names
     this.actionHistory = [];         // array of moves from baseStateJson
@@ -528,8 +531,12 @@ Game.prototype = {
         this.reinforcementsToPlace = this.getPredictedReinforcements(this.whoseTurn);
         return true;
     },
-    addNewCountry : function(name, connectedToArray){
-        var newCountry = new Country({'name':name, 'connectedTo':connectedToArray});
+    addNewCountry : function(name, connectedToArray, x, y){
+        if (x === undefined || y === undefined){
+            var newCountry = new Country({'name':name, 'connectedTo':connectedToArray});
+        } else {
+            var newCountry = new Country({'name':name, 'connectedTo':connectedToArray, 'x':x, 'y':y});
+        }
         this.countries.push(newCountry);
     },
     setCountryState : function(name, player, numTroops){
