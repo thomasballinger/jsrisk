@@ -45,7 +45,7 @@ var createButtonsForNextChoice = function(choice){
 
 var argArray = [];
 var startStuff = function(){
-    document.writeln(superagent)
+    //document.writeln(superagent)
     initializeRisk();
     createButton('display', "t(na.getAscii());", "spanForLongTerm");
     document.getElementById("spanForLongTerm").removeChild(document.getElementById("start"));
@@ -53,6 +53,7 @@ var startStuff = function(){
 var na = null;
 var t = null;
 var initializeRisk = function(){
+    var imageDiv = document.getElementById("map");
     var output = document.getElementById("output");
     t = function(msg){output.innerHTML = output.innerHTML + msg + '\n';};
     window.t = function(msg){output.innerHTML = msg;};

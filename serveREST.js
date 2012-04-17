@@ -46,6 +46,9 @@ app.get('/logout', function(req, res, next){
 	//console.log('cleared session data field "user"');
 	res.send('<html>You are no longer logged in.</html>');
 });
+app.get('/currentuser', function(req, res, next){
+	res.send('current user: '+req.session.user);
+});
 
 // These are basic storage and retrival, for testing only
 // the post one should be disabled later

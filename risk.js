@@ -1,7 +1,10 @@
 // Risk in javascript
 // First project in javascript
 // planning for a client/server architecture
-var util = require('./util');
+var exports; // does nothing
+if (exports){
+    var dataEquivalent = require('./dataEquivalent').dataEquivalent;
+}
 
 var Country = function(obj){
     if (typeof obj != 'undefined'){
@@ -84,7 +87,7 @@ Game.clientReconstitute = function(s){
 };
 // The games are equivalent at every level, including secure saved states
 Game.areIdentical = function(game1, game2){
-    return util.dataEquivalent(game1, game2);
+    return dataEquivalent(game1, game2);
 };
 // The games are equivalent in 
 Game.prototype = {
@@ -560,7 +563,7 @@ Game.prototype = {
     },
 }
 
-var exports; //does nothing if already defined because javascript is weird
+var exports; 
 if (exports){
 	exports.Game = Game;
 }

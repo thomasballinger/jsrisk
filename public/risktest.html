@@ -1,20 +1,77 @@
 <html>
     <head>
-        <script src="risk.js">
-        </script>
-        <script src="cheapinterface.js">
-        </script>
+        <script src="dataEquivalent.js"></script>
+        <script src="util.js"></script>
+        <script src="risk.js"></script>
+        <script src="cheapinterface.js"></script>
+        <script src="superagent.js"></script>
     </head>
     <body>
         <h2 id="header"> a header </h2>
-        <span id="spanForChangingPlayer">
-        </span>
-        <pre id="output"> beginning inner html </pre>
-        <span id="spanForLongTerm">
-            <button onclick="startStuff();" id="start">start</button>
-        </span>
+        <a href="" id="spanForChangingPlayer">login</a>
+        <pre id="textOutput"> beginning inner html </pre>
+        <div id="map" style="position: relative; z-index:100">
+        </div>
         <span id="spanForInput">
             inside the span for input
         </span>
+        <script>
+var server = '/';
+var request = superagent;
+var loginButton = document.getElementById("loginButton");
+var textOutput = document.getElementById("textOutput");
+var map = document.getElementById("map");
+var countrySpots = [];
+
+
+var write = function(msg){
+    textOutput.innerHTML = msg;
+};
+var displayMap = function(g){
+    if (map.children.length == 0){
+        var mapImg = new Image();
+        mapImg.src = g.mapImage;
+        map.appendChild(mapImg);
+    }
+    var colors = ['/redCircle.png', '/blueCircle.png'];
+    for (var i in g.countries){
+        if (!countrySpots[i]){
+            var spot = document.createElement('div');
+            var im = new Image();
+            var text = document.createElement('text');
+            im.style.position = 'absolute'
+            text.style.position = 'absolute'
+            text.style.margin = '0px auto'
+            text.style.fontSize = 12;
+            spot.appendChild(im);
+            spot.appendChild(text);
+            spot.style.position = 'absolute';
+            spot.style.left = g.countries[i].x;
+            spot.style.top = g.countries[i].y;
+            countrySpots[i] = spot;
+            map.appendChild(spot);
+        }
+        var color = colors[g.players.indexOf(g.countries[i].player)];
+        spot.getElementsByTagName('img')[0].src = color;
+        spot.getElementsByTagName('text')[0].innerText = '12';
+    }
+};
+var getGame = function(name, callback){
+    request.get(server+'gamelogic/game/'+name, function(res){
+        g = new Game(res.body)
+        callback(g);
+    });
+};
+var getGameNames = function(){
+    request.get(server, function(res){
+        write(res.body)
+    })
+};
+getGame('test', function(g){
+    write(g.getAscii())
+    displayMap(g);
+    console.log('should have just fixed it');
+});
+        </script>
     </body>
 </html>

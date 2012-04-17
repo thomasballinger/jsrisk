@@ -11,6 +11,7 @@ var createGame = require('../util').createGame;
 var clearDatabase = require('../util').clearDatabase
 var insertGame = require('../util').insertGame
 var util = require('../util');
+var dataEquivalent = require('../dataEquivalent').dataEquivalent
 
 
 describe('RESTserver', function() {
@@ -246,7 +247,7 @@ describe('RESTserver', function() {
 						assert.equal(res.statusCode, '200');
 						assert.equal(res.body.name, 'game1');
 						assert.equal(res.body.turnPhase, 'attack');
-						assert.equal(util.dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
+						assert.equal(dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
 						done();
 					});
 			});
@@ -259,15 +260,15 @@ describe('RESTserver', function() {
 						assert.equal(res.statusCode, '200');
 						assert.equal(res.body.name, 'game1');
 						assert.equal(res.body.turnPhase, 'attack');
-						assert.equal(util.dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
+						assert.equal(dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
 						request.get('localhost:'+port+'/gamelogic/game/game1/attack/usa/canada/3')
 							.set('Cookie', sessionCookie)
 							.end(function(res){
 								assert.equal(res.statusCode, '200');
 								assert.equal(res.body.name, 'game1');
 								assert.equal(res.body.turnPhase, 'attack');
-								assert.equal(util.dataEquivalent(res.body.baseStateJson, identical_game.toJson()), false);
-								assert.equal(util.dataEquivalent(res.body.baseStateJson.countries, res.body.countries), true);
+								assert.equal(dataEquivalent(res.body.baseStateJson, identical_game.toJson()), false);
+								assert.equal(dataEquivalent(res.body.baseStateJson.countries, res.body.countries), true);
 								done();
 								});
 					});
@@ -281,7 +282,7 @@ describe('RESTserver', function() {
 						assert.equal(res.statusCode, '200');
 						assert.equal(res.body.name, 'game1');
 						assert.equal(res.body.turnPhase, 'attack');
-						assert.equal(util.dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
+						assert.equal(dataEquivalent(res.body.baseStateJson, identical_game.toJson()), true);
 						done();
 					});
 			});

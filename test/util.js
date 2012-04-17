@@ -1,7 +1,7 @@
 var assert = require('chai').assert;
 var chai = require('chai');
 
-var dataEquivalent = require('../util').dataEquivalent;
+var dataEquivalent = require('../dataEquivalent').dataEquivalent;
 
 describe('dataEquivalent', function(){
 	it('should find equivalent structures equal', function(done){
